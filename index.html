@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.C. Veteranos do Dona Catarina | Bairro Dona Catarina, Mairinque SP</title>
+    <meta name="description" content="Site oficial do E.C. Veteranos do Dona Catarina. Confira nossa história fundada em 1996, consulte nosso elenco, próximos compromissos e agende jogos amistosos aos Domingos no Campo da Cerim.">
+    <meta name="keywords" content="Veteranos Dona Catarina, Futebol Mairinque, Campo da Cerim, Futebol Veteranos, Agendar Amistoso, Cerim, Mairinque Futebol">
+    <meta name="author" content="E.C. Vet. Dona Catarina">
+    
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Header & Navegação -->
+    <header id="site-header">
+        <div class="nav-container">
+            <a href="#" class="logo-section" data-tab="home">
+                <img src="img/brasao.jpg" alt="Brasão E.C. Vet. Dona Catarina" class="logo-img" onerror="this.src='https://placehold.co/100x100/093b1f/ffffff?text=DC'">
+                <div>
+                    <h1 class="logo-text">DONA CATARINA</h1>
+                    <span class="logo-subtitle">Veteranos • Est. 1996</span>
+                </div>
+            </a>
+            
+            <button class="menu-toggle" id="menu-mobile-toggle" aria-label="Abrir Menu">
+                &#9776;
+            </button>
+            
+            <nav id="main-nav">
+                <ul>
+                    <li><button class="nav-btn active" data-tab="home">Início</button></li>
+                    <li><button class="nav-btn" data-tab="historia">História</button></li>
+                    <li><button class="nav-btn" data-tab="compromissos">Próximos Jogos</button></li>
+                    <li><button class="nav-btn" data-tab="elenco">Elenco</button></li>
+                    <li><button class="nav-btn" data-tab="agendamento">Agendar Jogo</button></li>
+                    <li><button class="nav-btn" data-tab="admin" style="border: 1px solid rgba(255,255,255,0.15)">Admin</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal com Tabs -->
+    <main id="main-content">
+
+        <!-- ==========================================
+             TAB: INÍCIO (HOME)
+             ========================================== -->
+        <section id="home" class="tab-content active">
+            <div class="hero">
+                <div class="hero-info">
+                    <h1>Veteranos do<br><span>Dona Catarina</span></h1>
+                    <p class="hero-tagline">
+                        Tradição, respeito e amizade nos gramados de Mairinque desde 1996. Defendendo com orgulho o pavilhão verde, vermelho e branco.
+                    </p>
+                    <div class="hero-cta">
+                        <button class="btn-primary" onclick="document.querySelector('[data-tab=agendamento]').click()">
+                            Agendar Amistoso
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                        </button>
+                        <button class="btn-secondary" onclick="document.querySelector('[data-tab=historia]').click()">
+                            Conhecer História
+                        </button>
+                    </div>
+                </div>
+                <div class="hero-image-wrapper">
+                    <div class="hero-img-card">
+                        <img src="img/brasao.jpg" alt="Brasão do E.C. Vet. Dona Catarina" class="hero-brasao" onerror="this.src='https://placehold.co/220x220/093b1f/ffffff?text=Dona+Catarina'">
+                        <h3>E.C. Vet. Dona Catarina</h3>
+                        <p>Fundado em 14/04/1996</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de Destaques Rápidos -->
+            <div class="quick-info-grid">
+                <div class="info-card">
+                    <div class="info-card-icon">⚽</div>
+                    <h3>Campo Próprio</h3>
+                    <p>Mandamos nossos jogos no tradicional <strong>Campo da Cerim</strong>, estrutura mantida e cuidada com carinho pelo time.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">📅</div>
+                    <h3>Jogos aos Domingos</h3>
+                    <p>Nossos confrontos e festividades esportivas acontecem tradicionalmente no período da manhã de todos os domingos.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">🤝</div>
+                    <h3>Amizade & Respeito</h3>
+                    <p>Equipe focada na união da comunidade, integração de atletas veteranos e fomento ao esporte na região.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: HISTÓRIA
+             ========================================== -->
+        <section id="historia" class="tab-content">
+            <h2 class="section-title">Nossa História</h2>
+            <p class="section-subtitle">A trajetória do <span>E.C. Veteranos do Dona Catarina</span> ao longo das décadas.</p>
+            
+            <div class="history-container">
+                <div class="history-card">
+                    <p>
+                        O Esporte Clube Veteranos do Dona Catarina nasceu da paixão compartilhada de amigos moradores do Bairro Dona Catarina, em Mairinque/SP. Em 14 de abril de 1996, decidiram fundar uma agremiação que unisse os veteranos do futebol da região, promovendo saúde, lazer e um churrasco de confraternização pós-jogo tradicional.
+                    </p>
+                    <p>
+                        O Campo da Cerim é o templo do futebol da nossa comunidade. Ele serve de palco para os nossos jogos memoráveis de domingo de manhã e mantém viva a chama do futebol amador regional.
+                    </p>
+                    <blockquote style="border-left: 4px solid var(--color-red-primary); padding-left: 1.5rem; margin: 2rem 0; font-style: italic; color: #cbd5e0;">
+                        "Mais do que futebol, os Veteranos do Dona Catarina representam a força e a união de nossa comunidade!"
+                    </blockquote>
+                    <p style="color: var(--color-green-light); font-weight: 600;">
+                        *Nota: Detalhes históricos completos, fotografias antigas e conquistas adicionais serão adicionados em breve.*
+                    </p>
+                </div>
+
+                <!-- Linha do Tempo Visual -->
+                <div class="history-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-year">1996</div>
+                        <h4 class="timeline-title">Fundação do Clube</h4>
+                        <p style="color: #cbd5e0; font-size: 0.95rem;">Fundado oficialmente no dia 14 de Abril de 1996 por iniciativa de esportistas do bairro Dona Catarina.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2005</div>
+                        <h4 class="timeline-title">Estruturação do Campo da Cerim</h4>
+                        <p style="color: #cbd5e0; font-size: 0.95rem;">Consolidação e benfeitorias estruturais no Campo da Cerim, tornando-o nossa casa oficial de jogos.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2016</div>
+                        <h4 class="timeline-title">Aniversário de 20 Anos</h4>
+                        <p style="color: #cbd5e0; font-size: 0.95rem;">Grande comemoração de duas décadas de futebol aos domingos com partidas festivas regionais.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2026</div>
+                        <h4 class="timeline-title">Inovação Digital</h4>
+                        <p style="color: #cbd5e0; font-size: 0.95rem;">Lançamento do portal oficial do clube para agendamentos online e gestão de elenco.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: PRÓXIMOS JOGOS (CALENDÁRIO)
+             ========================================== -->
+        <section id="compromissos" class="tab-content">
+            <h2 class="section-title">Próximos Compromissos</h2>
+            <p class="section-subtitle">Confira a agenda das próximas partidas aos <span>Domingos</span> no Campo da Cerim ou fora.</p>
+            
+            <div class="matches-grid" id="matches-grid">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: ELENCO
+             ========================================== -->
+        <section id="elenco" class="tab-content">
+            <h2 class="section-title">Nosso Elenco</h2>
+            <p class="section-subtitle">Os guerreiros que representam as cores do <span>Dona Catarina</span> hoje.</p>
+            
+            <!-- Barra de Filtros de Posição -->
+            <div class="squad-filter">
+                <button class="filter-btn active" data-filter="todos">Todos</button>
+                <button class="filter-btn" data-filter="goleiro">Goleiros</button>
+                <button class="filter-btn" data-filter="defesa">Defesa</button>
+                <button class="filter-btn" data-filter="meio-campo">Meio-Campo</button>
+                <button class="filter-btn" data-filter="ataque">Ataque</button>
+            </div>
+            
+            <div class="squad-grid" id="squad-grid">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: CONTATO & AGENDAMENTO
+             ========================================== -->
+        <section id="agendamento" class="tab-content">
+            <h2 class="section-title">Agende um Jogo</h2>
+            <p class="section-subtitle">Sua equipe quer enfrentar os <span>Veteranos do Dona Catarina</span>? Preencha o formulário para propor o amistoso aos Domingos.</p>
+            
+            <div class="contact-container">
+                <div class="contact-info-panel">
+                    <h3>Informações Importantes</h3>
+                    <p class="contact-info-desc">
+                        Jogamos preferencialmente aos <strong>Domingos pela manhã</strong>. Possuímos nossa própria praça esportiva estruturada para receber bem a sua equipe.
+                    </p>
+                    
+                    <div class="contact-details">
+                        <div class="contact-detail-card">
+                            <div class="contact-detail-icon">📍</div>
+                            <div class="contact-detail-content">
+                                <h4>Localização do Campo</h4>
+                                <p>Campo da Cerim, Bairro Dona Catarina - Mairinque / SP</p>
+                            </div>
+                        </div>
+                        <div class="contact-detail-card">
+                            <div class="contact-detail-icon">⚽</div>
+                            <div class="contact-detail-content">
+                                <h4>Nossa Estrutura</h4>
+                                <p>Vestiários, estacionamento, bar e área para confraternização.</p>
+                            </div>
+                        </div>
+                        <div class="contact-detail-card">
+                            <div class="contact-detail-icon">🕒</div>
+                            <div class="contact-detail-content">
+                                <h4>Dias e Horários</h4>
+                                <p>Domingos, às 09:30h ou 10:00h.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <form id="match-schedule-form">
+                        <div class="form-group">
+                            <label for="contact-team">Nome da Sua Equipe *</label>
+                            <input type="text" id="contact-team" class="form-control" placeholder="Ex: EC Veteranos de Sorocaba" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-rep">Nome do Responsável *</label>
+                            <input type="text" id="contact-rep" class="form-control" placeholder="Ex: João Silva" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-phone">WhatsApp / Telefone de Contato *</label>
+                            <input type="tel" id="contact-phone" class="form-control" placeholder="Ex: (11) 99999-9999" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="contact-date">Sugestão de Data (Domingo) *</label>
+                                <input type="date" id="contact-date" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="contact-time">Horário Sugerido *</label>
+                                <input type="time" id="contact-time" class="form-control" value="09:30" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-message">Mensagem / Observações</label>
+                            <textarea id="contact-message" class="form-control" placeholder="Diga se o jogo é no Campo da Cerim ou em seu campo, regras do amistoso, etc."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                            Propor Desafio (WhatsApp)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: PAINEL ADMINISTRATIVO (ADMIN)
+             ========================================== -->
+        <section id="admin" class="tab-content">
+            <h2 class="section-title">Painel do Administrador</h2>
+            <p class="section-subtitle">Gestão do elenco de jogadores e configurações do site.</p>
+            
+            <!-- Login do Admin -->
+            <div class="admin-login-wrapper" id="admin-login-section">
+                <div class="form-card" style="padding: 2.5rem 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; text-align: center; font-family: var(--font-heading)">Identificação Necessária</h3>
+                    <form id="admin-login-form">
+                        <div class="form-group">
+                            <label for="admin-pin">Digite a Senha do Admin</label>
+                            <input type="password" id="admin-pin" class="form-control" placeholder="Dica: catarina" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                            Entrar no Painel
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Painel Logado -->
+            <div id="admin-dashboard-section" class="admin-dashboard" style="display: none;">
+                <!-- Formulário para Cadastrar Jogador -->
+                <div class="form-card" style="padding: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); color: var(--color-green-light)">Cadastrar Jogador</h3>
+                    <form id="add-player-form">
+                        <div class="form-group">
+                            <label for="player-name-input">Nome do Atleta *</label>
+                            <input type="text" id="player-name-input" class="form-control" placeholder="Ex: Roberto Carlos" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="player-number-input">Nº da Camisa *</label>
+                                <input type="number" id="player-number-input" class="form-control" min="1" max="99" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="player-position-select">Posição *</label>
+                                <select id="player-position-select" class="form-control" required>
+                                    <option value="goleiro">Goleiro</option>
+                                    <option value="defesa">Defensor</option>
+                                    <option value="meio-campo">Meio-Campista</option>
+                                    <option value="ataque">Atacante</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                            Salvar no Elenco
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tabela de Jogadores Cadastrados -->
+                <div>
+                    <div class="admin-actions">
+                        <button class="btn-secondary" id="admin-export-btn">
+                            📤 Exportar Elenco (JSON)
+                        </button>
+                        <label class="btn-secondary" style="cursor: pointer;">
+                            📥 Importar Elenco (JSON)
+                            <input type="file" id="admin-import-file" style="display:none;" accept=".json">
+                        </label>
+                        <button class="btn-danger" id="admin-logout-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--color-white)">
+                            Sair
+                        </button>
+                    </div>
+                    
+                    <div class="admin-table-card">
+                        <table class="admin-table" id="admin-players-table">
+                            <thead>
+                                <tr>
+                                    <th>Camisa</th>
+                                    <th>Nome</th>
+                                    <th>Posição</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Inserido dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer>
+        <div class="footer-logo">
+            <img src="img/brasao.jpg" alt="Logo Dona Catarina" onerror="this.src='https://placehold.co/50x50/093b1f/ffffff?text=DC'">
+            <span>E.C. Vet. Dona Catarina</span>
+        </div>
+        <ul class="footer-nav">
+            <li><a href="#" data-tab="home">Início</a></li>
+            <li><a href="#" data-tab="historia">História</a></li>
+            <li><a href="#" data-tab="compromissos">Agenda</a></li>
+            <li><a href="#" data-tab="elenco">Elenco</a></li>
+            <li><a href="#" data-tab="agendamento">Agendar</a></li>
+            <li><a href="#" data-tab="admin">Painel Admin</a></li>
+        </ul>
+        <hr class="footer-divider">
+        <div class="footer-bottom">
+            <p>&copy; 2026 E.C. Veteranos do Dona Catarina. Fundado em 14/04/1996. Todos os direitos reservados.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #4a5568;">Campo da Cerim, Bairro Dona Catarina - Mairinque / SP</p>
+        </div>
+    </footer>
+
+    <!-- Contêiner de Toasts (Notificações do sistema) -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Script Principal -->
+    <script src="app.js"></script>
+</body>
+</html>

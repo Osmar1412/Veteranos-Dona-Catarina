@@ -1,0 +1,515 @@
+// Banco de Dados Padrão (Carregado se o LocalStorage estiver vazio)
+const defaultPlayers = [
+    { id: 1, name: "Marcos Goleiro", number: 1, position: "goleiro" },
+    { id: 2, name: "Cláudio", number: 12, position: "goleiro" },
+    { id: 3, name: "Dinei", number: 3, position: "defesa" },
+    { id: 4, name: "Adilson (Capitão)", number: 4, position: "defesa" },
+    { id: 5, name: "Zinho", number: 2, position: "defesa" },
+    { id: 6, name: "Chico", number: 6, position: "defesa" },
+    { id: 7, name: "Mário", number: 5, position: "meio-campo" },
+    { id: 8, name: "Valdir", number: 8, position: "meio-campo" },
+    { id: 9, name: "Carlinhos", number: 10, position: "meio-campo" },
+    { id: 10, name: "Tico", number: 7, position: "meio-campo" },
+    { id: 11, name: "Osmar", number: 9, position: "ataque" },
+    { id: 12, name: "Roberto", number: 11, position: "ataque" },
+    { id: 13, name: "Neco", number: 18, position: "ataque" }
+];
+
+const defaultMatches = [
+    {
+        id: 1,
+        opponent: "Veteranos de Mairinque",
+        date: "16/08/2026",
+        time: "09:30",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true
+    },
+    {
+        id: 2,
+        opponent: "Esporte Clube São Roque",
+        date: "23/08/2026",
+        time: "10:00",
+        location: "Campo Municipal de São Roque",
+        isHome: false
+    },
+    {
+        id: 3,
+        opponent: "Amigos do Bairro Cerim",
+        date: "30/08/2026",
+        time: "09:30",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true
+    }
+];
+
+// Inicialização do Estado
+let players = JSON.parse(localStorage.getItem('vet_dona_catarina_players')) || defaultPlayers;
+let matches = JSON.parse(localStorage.getItem('vet_dona_catarina_matches')) || defaultMatches;
+let isAdminAuthenticated = sessionStorage.getItem('vet_dona_catarina_admin') === 'true';
+
+// Salvar dados no LocalStorage
+function savePlayers() {
+    localStorage.setItem('vet_dona_catarina_players', JSON.stringify(players));
+}
+
+function saveMatches() {
+    localStorage.setItem('vet_dona_catarina_matches', JSON.stringify(matches));
+}
+
+// Inicializar aplicação
+document.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
+    initMobileMenu();
+    renderSquad('todos');
+    renderMatches();
+    initContactForm();
+    initAdminForm();
+    checkAdminAuthState();
+});
+
+/* ==========================================================================
+   NAVEGAÇÃO E INTERFACE (TABS)
+   ========================================================================== */
+
+function initNavigation() {
+    const navButtons = document.querySelectorAll('.nav-btn, .footer-nav a[data-tab]');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetTab = btn.getAttribute('data-tab');
+            
+            // Fechar menu mobile se estiver aberto
+            const nav = document.querySelector('nav');
+            if (nav.classList.contains('show')) {
+                nav.classList.remove('show');
+            }
+
+            // Ativar botões da barra de navegação correspondentes
+            navButtons.forEach(b => {
+                if (b.getAttribute('data-tab') === targetTab) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+
+            // Ativar aba correspondente
+            tabContents.forEach(tab => {
+                if (tab.id === targetTab) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Rolar suavemente para o topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+}
+
+function initMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.querySelector('nav');
+
+    menuToggle.addEventListener('click', () => {
+        nav.classList.toggle('show');
+    });
+}
+
+/* ==========================================================================
+   ELENCO DE JOGADORES (SQUAD)
+   ========================================================================== */
+
+function renderSquad(filter = 'todos') {
+    const squadGrid = document.getElementById('squad-grid');
+    if (!squadGrid) return;
+
+    squadGrid.innerHTML = '';
+
+    const filteredPlayers = filter === 'todos' 
+        ? players 
+        : players.filter(p => p.position === filter);
+
+    if (filteredPlayers.length === 0) {
+        squadGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #a0aec0;">
+                <p>Nenhum jogador cadastrado nesta posição.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar por número da camisa
+    filteredPlayers.sort((a, b) => a.number - b.number);
+
+    filteredPlayers.forEach(player => {
+        const card = document.createElement('div');
+        card.className = `player-card player-pos-${player.position}`;
+        
+        let positionLabel = '';
+        switch(player.position) {
+            case 'goleiro': positionLabel = 'Goleiro'; break;
+            case 'defesa': positionLabel = 'Defensor'; break;
+            case 'meio-campo': positionLabel = 'Meio-Campista'; break;
+            case 'ataque': positionLabel = 'Atacante'; break;
+        }
+
+        card.innerHTML = `
+            <div class="player-number">${player.number}</div>
+            <div class="player-photo-container">
+                <!-- SVG de silhueta masculina padrão premium -->
+                <svg class="player-avatar-svg" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </div>
+            <div class="player-info">
+                <h3 class="player-name">${player.name}</h3>
+                <span class="player-position">${positionLabel}</span>
+                <div>
+                    <span class="player-jersey-number">Nº ${player.number}</span>
+                </div>
+            </div>
+        `;
+        squadGrid.appendChild(card);
+    });
+
+    // Configurar filtros
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        if (btn.getAttribute('data-filter') === filter) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+        
+        // Evitar duplicar listeners
+        btn.onclick = () => renderSquad(btn.getAttribute('data-filter'));
+    });
+}
+
+/* ==========================================================================
+   PRÓXIMOS COMPROMISSOS (JOGOS)
+   ========================================================================== */
+
+function renderMatches() {
+    const matchesGrid = document.getElementById('matches-grid');
+    if (!matchesGrid) return;
+
+    matchesGrid.innerHTML = '';
+
+    if (matches.length === 0) {
+        matchesGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem; background: var(--color-neutral-card); border-radius: var(--border-radius-lg); border: 1px solid var(--color-glass-border)">
+                <p style="color: #a0aec0;">Nenhum jogo agendado no momento. Solicite um amistoso no formulário abaixo!</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar jogos por data (mais antigos/próximos primeiro para compromissos)
+    const sortedMatches = [...matches].sort((a, b) => {
+        const dateA = a.date.split('/').reverse().join('-');
+        const dateB = b.date.split('/').reverse().join('-');
+        return new Date(dateA) - new Date(dateB);
+    });
+
+    sortedMatches.forEach(match => {
+        const card = document.createElement('div');
+        card.className = 'match-card';
+        
+        const badgeClass = match.isHome ? 'home' : 'away';
+        const badgeLabel = match.isHome ? 'Casa' : 'Fora';
+
+        card.innerHTML = `
+            <div class="match-header">
+                <span>DOMINGO - CAMPEONATO/AMISTOSO</span>
+                <span class="match-badge ${badgeClass}">${badgeLabel}</span>
+            </div>
+            <div class="match-teams">
+                <div class="match-team">
+                    <img src="img/brasao.jpg" alt="Dona Catarina Logo" class="match-team-logo" onerror="this.src='https://placehold.co/100x100/093b1f/ffffff?text=DC'">
+                    <span class="match-team-name">Dona Catarina</span>
+                </div>
+                <div class="match-vs">VS</div>
+                <div class="match-team">
+                    <div class="match-team-logo" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:1.5rem;font-family:var(--font-heading)">
+                        ${match.opponent.substring(0,2).toUpperCase()}
+                    </div>
+                    <span class="match-team-name">${match.opponent}</span>
+                </div>
+            </div>
+            <div class="match-footer">
+                <div class="match-detail-item">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span>${match.date} às ${match.time}</span>
+                </div>
+                <div class="match-detail-item">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span>${match.location}</span>
+                </div>
+            </div>
+        `;
+        matchesGrid.appendChild(card);
+    });
+}
+
+/* ==========================================================================
+   FORMULÁRIO DE CONTATO/AGENDAMENTO
+   ========================================================================== */
+
+function initContactForm() {
+    const contactForm = document.getElementById('match-schedule-form');
+    if (!contactForm) return;
+
+    contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const teamName = document.getElementById('contact-team').value;
+        const repName = document.getElementById('contact-rep').value;
+        const repPhone = document.getElementById('contact-phone').value;
+        const matchDate = document.getElementById('contact-date').value;
+        const matchTime = document.getElementById('contact-time').value;
+        const message = document.getElementById('contact-message').value;
+
+        // Número de WhatsApp oficial do time (Pode ser alterado)
+        // Substitua pelo número real no formato internacional sem "+" ex: 5511999999999
+        const whatsappNumber = "5511999999999"; 
+
+        const formattedText = `Olá! Sou o ${repName} do time *${teamName}*.\nGostaria de agendar um jogo amistoso com os *Veteranos do Dona Catarina*.\n\n` + 
+                              `📅 *Data Sugerida:* ${matchDate} (Domingo)\n` +
+                              `⏰ *Horário:* ${matchTime}\n` +
+                              `📞 *Contato:* ${repPhone}\n\n` +
+                              `📝 *Recado:* ${message}`;
+
+        const whatsappURL = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(formattedText)}`;
+
+        // Mostrar Toast de Sucesso
+        showToast("Encaminhando para o WhatsApp do time...");
+
+        // Redirecionar para o WhatsApp
+        setTimeout(() => {
+            window.open(whatsappURL, '_blank');
+            contactForm.reset();
+        }, 1500);
+    });
+}
+
+/* ==========================================================================
+   PAINEL ADMINISTRATIVO (ADMIN)
+   ========================================================================== */
+
+function checkAdminAuthState() {
+    const loginSection = document.getElementById('admin-login-section');
+    const dashboardSection = document.getElementById('admin-dashboard-section');
+
+    if (!loginSection || !dashboardSection) return;
+
+    if (isAdminAuthenticated) {
+        loginSection.style.display = 'none';
+        dashboardSection.style.display = 'grid';
+        renderAdminPlayersTable();
+    } else {
+        loginSection.style.display = 'block';
+        dashboardSection.style.display = 'none';
+    }
+}
+
+function initAdminForm() {
+    const loginForm = document.getElementById('admin-login-form');
+    const addPlayerForm = document.getElementById('add-player-form');
+    const logoutBtn = document.getElementById('admin-logout-btn');
+    const exportBtn = document.getElementById('admin-export-btn');
+    const importInput = document.getElementById('admin-import-file');
+
+    // Login
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pin = document.getElementById('admin-pin').value;
+            
+            // Senha padrão simple: "catarina"
+            if (pin.toLowerCase() === 'catarina') {
+                isAdminAuthenticated = true;
+                sessionStorage.setItem('vet_dona_catarina_admin', 'true');
+                checkAdminAuthState();
+                showToast("Acesso administrativo autorizado!");
+                loginForm.reset();
+            } else {
+                showToast("Senha incorreta! Tente novamente.", true);
+            }
+        });
+    }
+
+    // Logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            isAdminAuthenticated = false;
+            sessionStorage.removeItem('vet_dona_catarina_admin');
+            checkAdminAuthState();
+            showToast("Sessão finalizada.");
+        });
+    }
+
+    // Adicionar Jogador
+    if (addPlayerForm) {
+        addPlayerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('player-name-input').value;
+            const number = parseInt(document.getElementById('player-number-input').value);
+            const position = document.getElementById('player-position-select').value;
+
+            // Verificar se número já existe
+            if (players.some(p => p.number === number)) {
+                showToast(`A camisa Nº ${number} já está em uso!`, true);
+                return;
+            }
+
+            const newPlayer = {
+                id: Date.now(),
+                name,
+                number,
+                position
+            };
+
+            players.push(newPlayer);
+            savePlayers();
+            renderSquad('todos');
+            renderAdminPlayersTable();
+            addPlayerForm.reset();
+            showToast(`Jogador ${name} cadastrado com sucesso!`);
+        });
+    }
+
+    // Exportar Dados
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(players, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "elenco_veteranos_dona_catarina.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("Dados do elenco exportados!");
+        });
+    }
+
+    // Importar Dados
+    if (importInput) {
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedPlayers = JSON.parse(event.target.result);
+                    if (Array.isArray(importedPlayers) && importedPlayers.every(p => p.name && p.number && p.position)) {
+                        players = importedPlayers;
+                        savePlayers();
+                        renderSquad('todos');
+                        renderAdminPlayersTable();
+                        showToast("Elenco importado com sucesso!");
+                    } else {
+                        showToast("Formato de arquivo inválido!", true);
+                    }
+                } catch (error) {
+                    showToast("Erro ao ler o arquivo JSON!", true);
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+}
+
+function renderAdminPlayersTable() {
+    const tableBody = document.querySelector('#admin-players-table tbody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    // Ordenar por número
+    const sorted = [...players].sort((a, b) => a.number - b.number);
+
+    sorted.forEach(player => {
+        const row = document.createElement('tr');
+        
+        let positionLabel = '';
+        switch(player.position) {
+            case 'goleiro': positionLabel = 'Goleiro'; break;
+            case 'defesa': positionLabel = 'Defensor'; break;
+            case 'meio-campo': positionLabel = 'Meio-Campista'; break;
+            case 'ataque': positionLabel = 'Atacante'; break;
+        }
+
+        row.innerHTML = `
+            <td>${player.number}</td>
+            <td><strong>${player.name}</strong></td>
+            <td>${positionLabel}</td>
+            <td>
+                <button class="btn-danger" data-id="${player.id}">Remover</button>
+            </td>
+        `;
+
+        // Evento de exclusão
+        row.querySelector('.btn-danger').addEventListener('click', () => {
+            deletePlayer(player.id, player.name);
+        });
+
+        tableBody.appendChild(row);
+    });
+}
+
+function deletePlayer(id, name) {
+    if (confirm(`Deseja realmente remover o jogador "${name}" do elenco?`)) {
+        players = players.filter(p => p.id !== id);
+        savePlayers();
+        renderSquad('todos');
+        renderAdminPlayersTable();
+        showToast(`Jogador ${name} foi removido.`);
+    }
+}
+
+/* ==========================================================================
+   SISTEMA DE TOAST (AVISOS)
+   ========================================================================== */
+
+function showToast(message, isError = false) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${isError ? 'error' : ''}`;
+    
+    const icon = isError 
+        ? `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
+        : `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+    toast.innerHTML = `
+        ${icon}
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Trigger reflow/animation
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Remover após 3 segundos
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
