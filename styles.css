@@ -272,7 +272,11 @@ main {
 .hero-brasao {
     width: 220px;
     height: 220px;
-    object-fit: contain;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--color-green-light);
+    box-shadow: 0 0 20px rgba(42, 157, 104, 0.4);
+    background: var(--color-neutral-dark);
     margin-bottom: 1.5rem;
     filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
     animation: float 4s ease-in-out infinite;
