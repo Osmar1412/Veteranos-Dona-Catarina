@@ -230,7 +230,7 @@ function renderMatches() {
             </div>
             <div class="match-teams">
                 <div class="match-team">
-                    <img src="img/brasao.jpg" alt="Dona Catarina Logo" class="match-team-logo" onerror="this.src='https://placehold.co/100x100/093b1f/ffffff?text=DC'">
+                    <img src="img/brasao.jpg?v=2" alt="Dona Catarina Logo" class="match-team-logo" onerror="this.src='https://placehold.co/100x100/093b1f/ffffff?text=DC'">
                     <span class="match-team-name">Dona Catarina</span>
                 </div>
                 <div class="match-vs">VS</div>
