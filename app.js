@@ -47,6 +47,7 @@ let players = JSON.parse(localStorage.getItem('vet_dona_catarina_players')) || d
 let matches = JSON.parse(localStorage.getItem('vet_dona_catarina_matches')) || defaultMatches;
 let isAdminAuthenticated = sessionStorage.getItem('vet_dona_catarina_admin') === 'true';
 let editingPlayerId = null;
+let coachName = localStorage.getItem('vet_dona_catarina_coach') || "A definir";
 
 // Salvar dados no LocalStorage
 function savePlayers() {
@@ -130,16 +131,42 @@ function renderSquad(filter = 'todos') {
 
     squadGrid.innerHTML = '';
 
+    // Renderizar Treinador (Comissão Técnica) no topo se o filtro for 'todos'
+    if (filter === 'todos') {
+        const coachCard = document.createElement('div');
+        coachCard.className = 'player-card coach-card';
+        coachCard.style.borderLeft = '4px solid var(--color-gold)';
+        
+        coachCard.innerHTML = `
+            <div class="player-number" style="color: rgba(241, 196, 15, 0.15)">📋</div>
+            <div class="player-photo-container" style="border-color: var(--color-gold)">
+                <svg class="player-avatar-svg" viewBox="0 0 24 24" style="fill: var(--color-gold)">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </div>
+            <div class="player-info">
+                <h3 class="player-name">${coachName}</h3>
+                <span class="player-position" style="color: var(--color-gold)">Treinador</span>
+                <div>
+                    <span class="player-jersey-number" style="background: rgba(241, 196, 15, 0.1); color: var(--color-gold)">Comissão Técnica</span>
+                </div>
+            </div>
+        `;
+        squadGrid.appendChild(coachCard);
+    }
+
     const filteredPlayers = filter === 'todos' 
         ? players 
         : players.filter(p => p.position === filter);
 
     if (filteredPlayers.length === 0) {
-        squadGrid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #a0aec0;">
-                <p>Nenhum jogador cadastrado nesta posição.</p>
-            </div>
-        `;
+        if (filter !== 'todos') {
+            squadGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #a0aec0;">
+                    <p>Nenhum jogador cadastrado nesta posição.</p>
+                </div>
+            `;
+        }
         return;
     }
 
@@ -452,6 +479,24 @@ function initAdminForm() {
                 }
             };
             reader.readAsText(file);
+        });
+    }
+
+    // Treinador / Comissão Técnica
+    const coachForm = document.getElementById('coach-form');
+    if (coachForm) {
+        const coachInput = document.getElementById('coach-name-input');
+        if (coachInput) {
+            coachInput.value = coachName === "A definir" ? "" : coachName;
+        }
+
+        coachForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newCoachName = document.getElementById('coach-name-input').value;
+            coachName = newCoachName || "A definir";
+            localStorage.setItem('vet_dona_catarina_coach', coachName);
+            renderSquad('todos');
+            showToast("Comissão técnica atualizada!");
         });
     }
 }
