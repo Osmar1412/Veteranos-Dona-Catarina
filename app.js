@@ -46,6 +46,7 @@ const defaultMatches = [
 let players = JSON.parse(localStorage.getItem('vet_dona_catarina_players')) || defaultPlayers;
 let matches = JSON.parse(localStorage.getItem('vet_dona_catarina_matches')) || defaultMatches;
 let isAdminAuthenticated = sessionStorage.getItem('vet_dona_catarina_admin') === 'true';
+let editingPlayerId = null;
 
 // Salvar dados no LocalStorage
 function savePlayers() {
@@ -361,7 +362,7 @@ function initAdminForm() {
         });
     }
 
-    // Adicionar Jogador
+    // Adicionar / Editar Jogador
     if (addPlayerForm) {
         addPlayerForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -370,25 +371,46 @@ function initAdminForm() {
             const number = parseInt(document.getElementById('player-number-input').value);
             const position = document.getElementById('player-position-select').value;
 
-            // Verificar se número já existe
-            if (players.some(p => p.number === number)) {
+            // Verificar se número já existe (excluindo o próprio jogador que estamos editando)
+            if (players.some(p => p.number === number && p.id !== editingPlayerId)) {
                 showToast(`A camisa Nº ${number} já está em uso!`, true);
                 return;
             }
 
-            const newPlayer = {
-                id: Date.now(),
-                name,
-                number,
-                position
-            };
+            if (editingPlayerId) {
+                // Modo Edição
+                const playerIndex = players.findIndex(p => p.id === editingPlayerId);
+                if (playerIndex !== -1) {
+                    players[playerIndex].name = name;
+                    players[playerIndex].number = number;
+                    players[playerIndex].position = position;
+                    showToast(`Dados de ${name} atualizados!`);
+                }
+            } else {
+                // Modo Cadastro
+                const newPlayer = {
+                    id: Date.now(),
+                    name,
+                    number,
+                    position
+                };
+                players.push(newPlayer);
+                showToast(`Jogador ${name} cadastrado com sucesso!`);
+            }
 
-            players.push(newPlayer);
             savePlayers();
             renderSquad('todos');
             renderAdminPlayersTable();
-            addPlayerForm.reset();
-            showToast(`Jogador ${name} cadastrado com sucesso!`);
+            resetAdminForm();
+        });
+    }
+
+    // Cancelar Edição
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            resetAdminForm();
+            showToast("Edição cancelada.");
         });
     }
 
@@ -459,12 +481,18 @@ function renderAdminPlayersTable() {
             <td><strong>${player.name}</strong></td>
             <td>${positionLabel}</td>
             <td>
-                <button class="btn-danger" data-id="${player.id}">Remover</button>
+                <button class="btn-secondary btn-edit" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem;" data-id="${player.id}">Editar</button>
+                <button class="btn-danger btn-delete" data-id="${player.id}">Remover</button>
             </td>
         `;
 
+        // Evento de edição
+        row.querySelector('.btn-edit').addEventListener('click', () => {
+            startEditPlayer(player.id);
+        });
+
         // Evento de exclusão
-        row.querySelector('.btn-danger').addEventListener('click', () => {
+        row.querySelector('.btn-delete').addEventListener('click', () => {
             deletePlayer(player.id, player.name);
         });
 
@@ -472,8 +500,51 @@ function renderAdminPlayersTable() {
     });
 }
 
+function startEditPlayer(id) {
+    const player = players.find(p => p.id === id);
+    if (!player) return;
+
+    editingPlayerId = player.id;
+
+    // Preencher formulário
+    document.getElementById('player-name-input').value = player.name;
+    document.getElementById('player-number-input').value = player.number;
+    document.getElementById('player-position-select').value = player.position;
+
+    // Mudar visual do formulário para Edição
+    const formTitle = document.getElementById('admin-form-title');
+    const submitBtn = document.getElementById('player-form-submit-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+
+    if (formTitle) formTitle.textContent = "Editar Jogador";
+    if (submitBtn) submitBtn.textContent = "Salvar Alterações";
+    if (cancelBtn) cancelBtn.style.display = 'block';
+
+    // Rolar suavemente até o formulário
+    document.getElementById('admin-form-title').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetAdminForm() {
+    const form = document.getElementById('add-player-form');
+    if (form) form.reset();
+    
+    editingPlayerId = null;
+    
+    const formTitle = document.getElementById('admin-form-title');
+    const submitBtn = document.getElementById('player-form-submit-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    
+    if (formTitle) formTitle.textContent = "Cadastrar Jogador";
+    if (submitBtn) submitBtn.textContent = "Salvar no Elenco";
+    if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
 function deletePlayer(id, name) {
     if (confirm(`Deseja realmente remover o jogador "${name}" do elenco?`)) {
+        // Se estivermos editando o jogador excluído, cancela a edição
+        if (editingPlayerId === id) {
+            resetAdminForm();
+        }
         players = players.filter(p => p.id !== id);
         savePlayers();
         renderSquad('todos');

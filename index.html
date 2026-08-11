@@ -278,7 +278,7 @@
             <div id="admin-dashboard-section" class="admin-dashboard" style="display: none;">
                 <!-- Formulário para Cadastrar Jogador -->
                 <div class="form-card" style="padding: 2rem;">
-                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); color: var(--color-green-light)">Cadastrar Jogador</h3>
+                    <h3 id="admin-form-title" style="margin-bottom: 1.5rem; font-family: var(--font-heading); color: var(--color-green-light)">Cadastrar Jogador</h3>
                     <form id="add-player-form">
                         <div class="form-group">
                             <label for="player-name-input">Nome do Atleta *</label>
@@ -299,8 +299,11 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                        <button type="submit" id="player-form-submit-btn" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
                             Salvar no Elenco
+                        </button>
+                        <button type="button" id="cancel-edit-btn" class="btn-secondary" style="width: 100%; justify-content: center; margin-top: 0.5rem; display: none;">
+                            Cancelar Edição
                         </button>
                     </form>
                 </div>
