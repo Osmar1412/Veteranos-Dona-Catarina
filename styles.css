@@ -351,7 +351,7 @@ main {
 .section-subtitle {
     text-align: center;
     color: #a0aec0;
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto 3rem auto;
     font-size: 1.1rem;
 }
@@ -1265,6 +1265,7 @@ footer {
     font-weight: 700;
     font-size: 1rem;
     color: var(--color-white);
+    white-space: nowrap;
 }
 
 .history-score-capsule {
