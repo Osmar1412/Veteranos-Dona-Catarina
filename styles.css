@@ -1292,8 +1292,8 @@ footer {
 .history-details-text {
     font-size: 0.85rem;
     color: #cbd5e0;
-    min-width: 200px;
     text-align: right;
+    white-space: nowrap;
 }
 
 @media (max-width: 768px) {
