@@ -9,7 +9,7 @@
     <meta name="author" content="E.C. Vet. Dona Catarina">
     
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 
@@ -174,6 +174,15 @@
             
             <div class="matches-grid" id="matches-grid">
                 <!-- Inserido dinamicamente via JS -->
+            </div>
+
+            <!-- Seção de Histórico de Jogos Realizados -->
+            <div class="history-results-section" style="margin-top: 5rem;">
+                <h2 class="section-title" style="font-size: 2.2rem; margin-bottom: 0.5rem;">Histórico de Resultados</h2>
+                <p class="section-subtitle">Confrontos e placares das partidas realizadas pela nossa equipe este ano.</p>
+                <div class="history-grid" id="history-grid">
+                    <!-- Inserido dinamicamente via JS -->
+                </div>
             </div>
         </section>
 
@@ -345,36 +354,67 @@
                     </form>
                 </div>
 
-                <!-- Formulório para Atualizar Placar -->
+                <!-- Formulório para Cadastrar/Editar Jogos -->
                 <div class="form-card" style="padding: 2rem; margin-top: 1.5rem;">
-                    <h3 style="margin-bottom: 1.2rem; font-family: var(--font-heading); color: var(--color-green-light)">Placar de Domingo</h3>
-                    <form id="scoreboard-form">
+                    <h3 id="admin-match-form-title" style="margin-bottom: 1.2rem; font-family: var(--font-heading); color: var(--color-green-light)">Cadastrar Confronto</h3>
+                    <form id="add-match-form">
                         <div class="form-group">
-                            <label for="score-opponent-input">Adversário *</label>
-                            <input type="text" id="score-opponent-input" class="form-control" placeholder="Ex: Granja Selecta F.C." required>
+                            <label for="match-opponent-input">Adversário *</label>
+                            <input type="text" id="match-opponent-input" class="form-control" placeholder="Ex: Granja Selecta F.C." required>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="score-home-input">Gols Dona Catarina *</label>
-                                <input type="number" id="score-home-input" class="form-control" min="0" required>
+                                <label for="match-date-input">Data do Jogo *</label>
+                                <input type="text" id="match-date-input" class="form-control" placeholder="Ex: 23/08/2026" required>
                             </div>
                             <div class="form-group">
-                                <label for="score-away-input">Gols Adversário *</label>
-                                <input type="number" id="score-away-input" class="form-control" min="0" required>
+                                <label for="match-time-input">Horário *</label>
+                                <input type="text" id="match-time-input" class="form-control" placeholder="Ex: 09:30" required>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="score-date-input">Data do Jogo *</label>
-                                <input type="text" id="score-date-input" class="form-control" placeholder="Ex: 16/08/2026" required>
+                                <label for="match-location-input">Local *</label>
+                                <input type="text" id="match-location-input" class="form-control" placeholder="Ex: Campo da Cerim" required>
                             </div>
                             <div class="form-group">
-                                <label for="score-location-input">Local *</label>
-                                <input type="text" id="score-location-input" class="form-control" placeholder="Ex: Campo da Cerim" required>
+                                <label for="match-mando-select">Mando de Campo *</label>
+                                <select id="match-mando-select" class="form-control" required>
+                                    <option value="casa">Casa (Campo da Cerim)</option>
+                                    <option value="fora">Fora</option>
+                                </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
-                            Atualizar Placar
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="match-status-select">Status do Jogo *</label>
+                                <select id="match-status-select" class="form-control" required>
+                                    <option value="agendado">Agendado (Próximo Jogo)</option>
+                                    <option value="jogado">Jogado (Placar/Histórico)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Campos de Gols (aparecem apenas se 'jogado' estiver ativo, controlamos via JS) -->
+                        <div id="match-score-fields" style="display: none; border: 1px dashed rgba(255,255,255,0.15); padding: 1rem; border-radius: var(--border-radius-sm); margin-bottom: 1rem; background: rgba(255,255,255,0.02)">
+                            <h4 style="font-size: 0.9rem; margin-bottom: 0.8rem; font-family: var(--font-heading); color: var(--color-gold)">Resultado do Placar</h4>
+                            <div class="form-row" style="margin-bottom: 0;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="match-home-score">Gols Dona Catarina</label>
+                                    <input type="number" id="match-home-score" class="form-control" min="0" value="0">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="match-away-score">Gols Adversário</label>
+                                    <input type="number" id="match-away-score" class="form-control" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="match-form-submit-btn" class="btn-primary" style="width: 100%; justify-content: center;">
+                            Salvar Confronto
+                        </button>
+                        <button type="button" id="cancel-match-edit-btn" class="btn-secondary" style="width: 100%; justify-content: center; margin-top: 0.5rem; display: none;">
+                            Cancelar Edição
                         </button>
                     </form>
                 </div>
@@ -394,7 +434,28 @@
                         </button>
                     </div>
                     
+                    <!-- Tabela de Confrontos Cadastrados -->
+                    <div class="admin-table-card" style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); color: var(--color-green-light)">Lista de Confrontos (Jogos)</h3>
+                        <table class="admin-table" id="admin-matches-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Adversário</th>
+                                    <th>Local / Mando</th>
+                                    <th>Status / Placar</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Inserido dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tabela de Elenco -->
                     <div class="admin-table-card">
+                        <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); color: var(--color-gold)">Lista de Jogadores (Elenco)</h3>
                         <table class="admin-table" id="admin-players-table">
                             <thead>
                                 <tr>

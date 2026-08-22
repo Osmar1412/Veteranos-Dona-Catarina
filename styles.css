@@ -1175,3 +1175,136 @@ footer {
     }
 }
 
+/* Histórico de Resultados */
+.history-results-section {
+    margin-top: 5rem;
+}
+
+.history-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.history-match-row {
+    background: var(--color-neutral-card);
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--border-radius-sm);
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    transition: var(--transition-smooth);
+}
+
+.history-match-row:hover {
+    transform: translateX(5px);
+    border-color: var(--color-green-light);
+    box-shadow: 0 4px 12px rgba(19, 117, 71, 0.15);
+}
+
+.history-date {
+    font-size: 0.85rem;
+    color: #a0aec0;
+    font-weight: 600;
+    min-width: 100px;
+}
+
+.history-teams-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.history-team-side {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex: 1;
+}
+
+.history-team-side.home {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.history-team-side.away {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.history-logo-mini {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    padding: 3px;
+    border: 1px solid var(--color-glass-border);
+}
+
+.history-name {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-white);
+}
+
+.history-score-capsule {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--color-glass-border);
+    padding: 0.4rem 1.2rem;
+    border-radius: 20px;
+    display: flex;
+    gap: 0.5rem;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--color-white);
+}
+
+.history-score-capsule .win {
+    color: var(--color-green-light);
+}
+
+.history-score-capsule .loss {
+    color: var(--color-red-primary);
+}
+
+.history-details-text {
+    font-size: 0.85rem;
+    color: #cbd5e0;
+    min-width: 200px;
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .history-match-row {
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .history-team-side.home, .history-team-side.away {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .history-teams-display {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+    
+    .history-details-text {
+        text-align: center;
+        min-width: unset;
+    }
+}
+

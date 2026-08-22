@@ -18,11 +18,14 @@ const defaultPlayers = [
 const defaultMatches = [
     {
         id: 1,
-        opponent: "Veteranos de Mairinque",
+        opponent: "Granja Selecta F.C.",
         date: "16/08/2026",
         time: "09:30",
         location: "Campo da Cerim (Nosso Campo)",
-        isHome: true
+        isHome: true,
+        played: true,
+        homeScore: 3,
+        awayScore: 2
     },
     {
         id: 2,
@@ -30,7 +33,10 @@ const defaultMatches = [
         date: "23/08/2026",
         time: "10:00",
         location: "Campo Municipal de São Roque",
-        isHome: false
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     },
     {
         id: 3,
@@ -38,7 +44,21 @@ const defaultMatches = [
         date: "30/08/2026",
         time: "09:30",
         location: "Campo da Cerim (Nosso Campo)",
-        isHome: true
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 4,
+        opponent: "Veteranos de Mairinque",
+        date: "06/09/2026",
+        time: "09:30",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -47,16 +67,30 @@ let players = JSON.parse(localStorage.getItem('vet_dona_catarina_players')) || d
 let matches = JSON.parse(localStorage.getItem('vet_dona_catarina_matches')) || defaultMatches;
 let isAdminAuthenticated = sessionStorage.getItem('vet_dona_catarina_admin') === 'true';
 let editingPlayerId = null;
+let editingMatchId = null; // Variável de controle para edição de partidas
 let coachName = localStorage.getItem('vet_dona_catarina_coach') || "A definir";
 
-const defaultLastMatch = {
-    opponent: "Granja Selecta F.C.",
-    homeScore: 3,
-    awayScore: 2,
-    date: "16/08/2026",
-    location: "Campo da Cerim (Nosso Campo)"
-};
-let lastMatch = JSON.parse(localStorage.getItem('vet_dona_catarina_last_match')) || defaultLastMatch;
+// Migração de dados legados do LocalStorage (garante compatibilidade)
+let needsSave = false;
+matches = matches.map(match => {
+    if (match.played === undefined) {
+        needsSave = true;
+        // Jogo 1 vira "Jogado" (Granja Selecta) e os demais continuam "Agendados"
+        match.played = (match.id === 1 || match.opponent.toLowerCase().includes("granja selecta"));
+        if (match.played) {
+            match.opponent = "Granja Selecta F.C.";
+            match.homeScore = 3;
+            match.awayScore = 2;
+        } else {
+            match.homeScore = 0;
+            match.awayScore = 0;
+        }
+    }
+    return match;
+});
+if (needsSave) {
+    localStorage.setItem('vet_dona_catarina_matches', JSON.stringify(matches));
+}
 
 // Salvar dados no LocalStorage
 function savePlayers() {
@@ -74,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSquad('todos');
     renderMatches();
     renderScoreboard();
+    renderHistory();
     initContactForm();
     initAdminForm();
     checkAdminAuthState();
@@ -238,7 +273,10 @@ function renderMatches() {
 
     matchesGrid.innerHTML = '';
 
-    if (matches.length === 0) {
+    // Filtrar apenas jogos NÃO realizados (played === false)
+    const upcomingMatches = matches.filter(m => !m.played);
+
+    if (upcomingMatches.length === 0) {
         matchesGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 4rem; background: var(--color-neutral-card); border-radius: var(--border-radius-lg); border: 1px solid var(--color-glass-border)">
                 <p style="color: #a0aec0;">Nenhum jogo agendado no momento. Solicite um amistoso no formulário abaixo!</p>
@@ -248,18 +286,33 @@ function renderMatches() {
     }
 
     // Ordenar jogos por data (mais antigos/próximos primeiro para compromissos)
-    const sortedMatches = [...matches].sort((a, b) => {
+    const sortedMatches = [...upcomingMatches].sort((a, b) => {
         const dateA = a.date.split('/').reverse().join('-');
         const dateB = b.date.split('/').reverse().join('-');
         return new Date(dateA) - new Date(dateB);
     });
 
-    sortedMatches.forEach(match => {
+    // Exibir apenas os 3 próximos domingos
+    const nextThreeMatches = sortedMatches.slice(0, 3);
+
+    nextThreeMatches.forEach(match => {
         const card = document.createElement('div');
         card.className = 'match-card';
         
         const badgeClass = match.isHome ? 'home' : 'away';
         const badgeLabel = match.isHome ? 'Casa' : 'Fora';
+
+        // Definir se usamos logotipo ou iniciais para o adversário
+        let opponentLogoHtml = '';
+        if (match.opponent.toLowerCase().includes("granja selecta")) {
+            opponentLogoHtml = `<img src="img/granja_selecta.png" alt="${match.opponent}" class="match-team-logo">`;
+        } else {
+            opponentLogoHtml = `
+                <div class="match-team-logo" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:1.5rem;font-family:var(--font-heading)">
+                    ${match.opponent.substring(0,2).toUpperCase()}
+                </div>
+            `;
+        }
 
         card.innerHTML = `
             <div class="match-header">
@@ -273,9 +326,7 @@ function renderMatches() {
                 </div>
                 <div class="match-vs">VS</div>
                 <div class="match-team">
-                    <div class="match-team-logo" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:1.5rem;font-family:var(--font-heading)">
-                        ${match.opponent.substring(0,2).toUpperCase()}
-                    </div>
+                    ${opponentLogoHtml}
                     <span class="match-team-name">${match.opponent}</span>
                 </div>
             </div>
@@ -299,6 +350,79 @@ function renderMatches() {
             </div>
         `;
         matchesGrid.appendChild(card);
+    });
+}
+
+function renderHistory() {
+    const historyGrid = document.getElementById('history-grid');
+    if (!historyGrid) return;
+
+    historyGrid.innerHTML = '';
+
+    // Filtrar apenas jogos realizados (played === true)
+    const playedMatches = matches.filter(m => m.played);
+
+    if (playedMatches.length === 0) {
+        historyGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #a0aec0; background: var(--color-neutral-card); border-radius: var(--border-radius-sm); border: 1px solid var(--color-glass-border)">
+                <p>Nenhum resultado registrado este ano.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar jogos por data decrescente (mais recente primeiro)
+    const sortedPlayed = [...playedMatches].sort((a, b) => {
+        const dateA = a.date.split('/').reverse().join('-');
+        const dateB = b.date.split('/').reverse().join('-');
+        return new Date(dateB) - new Date(dateA);
+    });
+
+    sortedPlayed.forEach(match => {
+        const row = document.createElement('div');
+        row.className = 'history-match-row';
+
+        // Definir se usamos logotipo ou iniciais para o adversário
+        let opponentLogoHtml = '';
+        if (match.opponent.toLowerCase().includes("granja selecta")) {
+            opponentLogoHtml = `<img src="img/granja_selecta.png" alt="${match.opponent}" class="history-logo-mini">`;
+        } else {
+            opponentLogoHtml = `
+                <div class="history-logo-mini" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:0.75rem;font-family:var(--font-heading)">
+                    ${match.opponent.substring(0,2).toUpperCase()}
+                </div>
+            `;
+        }
+
+        // Definir destaque visual do placar
+        let homeClass = '';
+        let awayClass = '';
+        if (match.homeScore > match.awayScore) {
+            homeClass = 'win';
+        } else if (match.homeScore < match.awayScore) {
+            awayClass = 'loss';
+        }
+
+        row.innerHTML = `
+            <div class="history-date">${match.date}</div>
+            <div class="history-teams-display">
+                <div class="history-team-side home">
+                    <span class="history-name">Dona Catarina</span>
+                    <img src="img/brasao.jpg?v=2" alt="Dona Catarina" class="history-logo-mini" onerror="this.src='https://placehold.co/50x50/093b1f/ffffff?text=DC'">
+                </div>
+                <div class="history-score-capsule">
+                    <span class="${homeClass}">${match.homeScore}</span>
+                    <span>-</span>
+                    <span class="${awayClass}">${match.awayScore}</span>
+                </div>
+                <div class="history-team-side away">
+                    ${opponentLogoHtml}
+                    <span class="history-name">${match.opponent}</span>
+                </div>
+            </div>
+            <div class="history-details-text">${match.location}</div>
+        `;
+        historyGrid.appendChild(row);
     });
 }
 
@@ -357,6 +481,7 @@ function checkAdminAuthState() {
         loginSection.style.display = 'none';
         dashboardSection.style.display = 'grid';
         renderAdminPlayersTable();
+        renderAdminMatchesTable();
     } else {
         loginSection.style.display = 'block';
         dashboardSection.style.display = 'none';
@@ -510,28 +635,80 @@ function initAdminForm() {
         });
     }
 
-    // Placar do Último Jogo (Administração)
-    const scoreboardForm = document.getElementById('scoreboard-form');
-    if (scoreboardForm) {
-        // Preencher inputs iniciais
-        document.getElementById('score-opponent-input').value = lastMatch.opponent;
-        document.getElementById('score-home-input').value = lastMatch.homeScore;
-        document.getElementById('score-away-input').value = lastMatch.awayScore;
-        document.getElementById('score-date-input').value = lastMatch.date;
-        document.getElementById('score-location-input').value = lastMatch.location;
+     // Toggle de exibição dos campos de placar conforme o status
+    const matchStatusSelect = document.getElementById('match-status-select');
+    const matchScoreFields = document.getElementById('match-score-fields');
+    if (matchStatusSelect && matchScoreFields) {
+        matchStatusSelect.addEventListener('change', () => {
+            if (matchStatusSelect.value === 'jogado') {
+                matchScoreFields.style.display = 'block';
+            } else {
+                matchScoreFields.style.display = 'none';
+            }
+        });
+    }
 
-        scoreboardForm.addEventListener('submit', (e) => {
+    // Adicionar / Editar Confronto
+    const addMatchForm = document.getElementById('add-match-form');
+    if (addMatchForm) {
+        addMatchForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            lastMatch.opponent = document.getElementById('score-opponent-input').value;
-            lastMatch.homeScore = parseInt(document.getElementById('score-home-input').value);
-            lastMatch.awayScore = parseInt(document.getElementById('score-away-input').value);
-            lastMatch.date = document.getElementById('score-date-input').value;
-            lastMatch.location = document.getElementById('score-location-input').value;
+            const opponent = document.getElementById('match-opponent-input').value;
+            const date = document.getElementById('match-date-input').value;
+            const time = document.getElementById('match-time-input').value;
+            const location = document.getElementById('match-location-input').value;
+            const isHome = document.getElementById('match-mando-select').value === 'casa';
+            const played = document.getElementById('match-status-select').value === 'jogado';
+            const homeScore = played ? parseInt(document.getElementById('match-home-score').value) || 0 : 0;
+            const awayScore = played ? parseInt(document.getElementById('match-away-score').value) || 0 : 0;
 
-            localStorage.setItem('vet_dona_catarina_last_match', JSON.stringify(lastMatch));
+            if (editingMatchId) {
+                // Editar jogo existente
+                const matchIndex = matches.findIndex(m => m.id === editingMatchId);
+                if (matchIndex !== -1) {
+                    matches[matchIndex].opponent = opponent;
+                    matches[matchIndex].date = date;
+                    matches[matchIndex].time = time;
+                    matches[matchIndex].location = location;
+                    matches[matchIndex].isHome = isHome;
+                    matches[matchIndex].played = played;
+                    matches[matchIndex].homeScore = homeScore;
+                    matches[matchIndex].awayScore = awayScore;
+                    showToast("Confronto atualizado com sucesso!");
+                }
+            } else {
+                // Cadastrar novo jogo
+                const newMatch = {
+                    id: Date.now(),
+                    opponent,
+                    date,
+                    time,
+                    location,
+                    isHome,
+                    played,
+                    homeScore,
+                    awayScore
+                };
+                matches.push(newMatch);
+                showToast("Confronto agendado com sucesso!");
+            }
+
+            saveMatches();
+            renderMatches();
+            renderHistory();
             renderScoreboard();
-            showToast("Placar atualizado com sucesso!");
+            renderAdminMatchesTable();
+            resetMatchForm();
+        });
+    }
+    
+    // Cancelar Edição do Confronto
+    const cancelMatchBtn = document.getElementById('cancel-match-edit-btn');
+    if (cancelMatchBtn) {
+        cancelMatchBtn.addEventListener('click', () => {
+            resetMatchForm();
+            showToast("Edição do confronto cancelada.");
         });
     }
 }
@@ -544,20 +721,151 @@ function renderScoreboard() {
     const dateEl = document.getElementById('scoreboard-date');
     const locationEl = document.getElementById('scoreboard-location');
 
-    if (homeScoreEl) homeScoreEl.textContent = lastMatch.homeScore;
-    if (awayScoreEl) awayScoreEl.textContent = lastMatch.awayScore;
-    if (awayNameEl) awayNameEl.textContent = lastMatch.opponent;
-    if (dateEl) dateEl.textContent = lastMatch.date;
-    if (locationEl) locationEl.textContent = lastMatch.location;
+    // Buscar o jogo realizado mais recente
+    const playedMatches = matches.filter(m => m.played);
+    
+    if (playedMatches.length === 0) {
+        // Se não houver jogos realizados, ocultar o placar da home
+        const scoreboardPanel = document.getElementById('last-match-scoreboard');
+        if (scoreboardPanel) scoreboardPanel.style.display = 'none';
+        return;
+    } else {
+        const scoreboardPanel = document.getElementById('last-match-scoreboard');
+        if (scoreboardPanel) scoreboardPanel.style.display = 'block';
+    }
+
+    // Ordenar por data decrescente (mais recente primeiro)
+    const sortedPlayed = [...playedMatches].sort((a, b) => {
+        const dateA = a.date.split('/').reverse().join('-');
+        const dateB = b.date.split('/').reverse().join('-');
+        return new Date(dateB) - new Date(dateA);
+    });
+
+    const lastPlayedMatch = sortedPlayed[0];
+
+    if (homeScoreEl) homeScoreEl.textContent = lastPlayedMatch.homeScore;
+    if (awayScoreEl) awayScoreEl.textContent = lastPlayedMatch.awayScore;
+    if (awayNameEl) awayNameEl.textContent = lastPlayedMatch.opponent;
+    if (dateEl) dateEl.textContent = lastPlayedMatch.date;
+    if (locationEl) locationEl.textContent = lastPlayedMatch.location;
 
     // Ajustar logotipo do adversário dinamicamente
     if (awayLogoEl) {
-        if (lastMatch.opponent.toLowerCase().includes("granja selecta")) {
+        if (lastPlayedMatch.opponent.toLowerCase().includes("granja selecta")) {
             awayLogoEl.src = "img/granja_selecta.png";
         } else {
             // Gerar um placeholder com as iniciais do adversário novo
-            awayLogoEl.src = `https://placehold.co/100x100/4a5568/ffffff?text=${encodeURIComponent(lastMatch.opponent.substring(0,2).toUpperCase())}`;
+            awayLogoEl.src = `https://placehold.co/100x100/4a5568/ffffff?text=${encodeURIComponent(lastPlayedMatch.opponent.substring(0,2).toUpperCase())}`;
         }
+    }
+}
+
+function renderAdminMatchesTable() {
+    const tableBody = document.querySelector('#admin-matches-table tbody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    // Ordenar todos os jogos por data (mais recentes primeiro)
+    const sorted = [...matches].sort((a, b) => {
+        const dateA = a.date.split('/').reverse().join('-');
+        const dateB = b.date.split('/').reverse().join('-');
+        return new Date(dateB) - new Date(dateA);
+    });
+
+    sorted.forEach(match => {
+        const row = document.createElement('tr');
+        
+        const statusLabel = match.played 
+            ? `<span style="color: var(--color-green-light); font-weight: bold;">Jogado (${match.homeScore} x ${match.awayScore})</span>` 
+            : '<span style="color: #cbd5e0; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Agendado</span>';
+        const mandoLabel = match.isHome ? 'Casa' : 'Fora';
+
+        row.innerHTML = `
+            <td>${match.date} às ${match.time}</td>
+            <td><strong>${match.opponent}</strong></td>
+            <td>${match.location} (${mandoLabel})</td>
+            <td>${statusLabel}</td>
+            <td>
+                <button class="btn-secondary btn-edit-match" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem;" data-id="${match.id}">Editar</button>
+                <button class="btn-danger btn-delete-match" data-id="${match.id}">Remover</button>
+            </td>
+        `;
+
+        // Evento de edição de jogo
+        row.querySelector('.btn-edit-match').addEventListener('click', () => {
+            startEditMatch(match.id);
+        });
+
+        // Evento de exclusão de jogo
+        row.querySelector('.btn-delete-match').addEventListener('click', () => {
+            deleteMatch(match.id, match.opponent);
+        });
+
+        tableBody.appendChild(row);
+    });
+}
+
+function startEditMatch(id) {
+    const match = matches.find(m => m.id === id);
+    if (!match) return;
+
+    editingMatchId = id;
+    
+    // Atualizar títulos e botões
+    document.getElementById('admin-match-form-title').textContent = "Editar Confronto";
+    document.getElementById('admin-match-form-title').style.color = "var(--color-gold)";
+    document.getElementById('match-form-submit-btn').textContent = "Salvar Alterações";
+    document.getElementById('cancel-match-edit-btn').style.display = "block";
+
+    // Preencher campos
+    document.getElementById('match-opponent-input').value = match.opponent;
+    document.getElementById('match-date-input').value = match.date;
+    document.getElementById('match-time-input').value = match.time;
+    document.getElementById('match-location-input').value = match.location;
+    document.getElementById('match-mando-select').value = match.isHome ? 'casa' : 'fora';
+    document.getElementById('match-status-select').value = match.played ? 'jogado' : 'agendado';
+
+    // Mostrar/ocultar campos de placar
+    const matchScoreFields = document.getElementById('match-score-fields');
+    if (match.played) {
+        matchScoreFields.style.display = 'block';
+        document.getElementById('match-home-score').value = match.homeScore;
+        document.getElementById('match-away-score').value = match.awayScore;
+    } else {
+        matchScoreFields.style.display = 'none';
+        document.getElementById('match-home-score').value = 0;
+        document.getElementById('match-away-score').value = 0;
+    }
+
+    // Rolagem suave até o formulário
+    document.getElementById('admin-match-form-title').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetMatchForm() {
+    editingMatchId = null;
+    
+    document.getElementById('admin-match-form-title').textContent = "Cadastrar Confronto";
+    document.getElementById('admin-match-form-title').style.color = "var(--color-green-light)";
+    document.getElementById('match-form-submit-btn').textContent = "Salvar Confronto";
+    document.getElementById('cancel-match-edit-btn').style.display = "none";
+
+    document.getElementById('add-match-form').reset();
+    document.getElementById('match-score-fields').style.display = 'none';
+}
+
+function deleteMatch(id, opponent) {
+    if (confirm(`Tem certeza que deseja remover o confronto contra o "${opponent}"?`)) {
+        if (editingMatchId === id) {
+            resetMatchForm();
+        }
+        matches = matches.filter(m => m.id !== id);
+        saveMatches();
+        renderMatches();
+        renderHistory();
+        renderScoreboard();
+        renderAdminMatchesTable();
+        showToast("Confronto removido!");
     }
 }
 
