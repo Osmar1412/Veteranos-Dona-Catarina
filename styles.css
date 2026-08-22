@@ -622,6 +622,12 @@ main {
 
 .form-group {
     margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group .form-control {
+    margin-top: auto;
 }
 
 .form-group label {
@@ -838,6 +844,12 @@ textarea.form-control {
     padding: 1rem;
     border-bottom: 1px solid var(--color-glass-border);
     color: #cbd5e0;
+}
+
+.admin-table th:last-child,
+.admin-table td:last-child {
+    white-space: nowrap;
+    min-width: 160px;
 }
 
 .admin-table tr:hover td {
