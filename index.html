@@ -9,7 +9,7 @@
     <meta name="author" content="E.C. Vet. Dona Catarina">
     
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 
@@ -70,6 +70,29 @@
                         <h3>E.C. Vet. Dona Catarina</h3>
                         <p>Fundado em 14/04/1996</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Placar do Último Confronto -->
+            <div class="last-match-scoreboard" id="last-match-scoreboard">
+                <div class="scoreboard-title">Último Confronto (Domingo Passado)</div>
+                <div class="scoreboard-content">
+                    <div class="score-team">
+                        <img src="img/brasao.jpg?v=2" alt="Dona Catarina" class="score-team-logo" onerror="this.src='https://placehold.co/100x100/093b1f/ffffff?text=DC'">
+                        <span class="score-team-name">Dona Catarina</span>
+                    </div>
+                    <div class="score-display">
+                        <span class="score-number" id="score-home">3</span>
+                        <span class="score-divider">x</span>
+                        <span class="score-number" id="score-away">2</span>
+                    </div>
+                    <div class="score-team">
+                        <img src="img/granja_selecta.png" id="score-away-logo" alt="Adversário" class="score-team-logo" onerror="this.src='https://placehold.co/100x100/4a5568/ffffff?text=ADV'">
+                        <span class="score-team-name" id="score-away-name">Granja Selecta F.C.</span>
+                    </div>
+                </div>
+                <div class="scoreboard-footer">
+                    <span id="scoreboard-date">Domingo, 16/08/2026</span> • <span id="scoreboard-location">Campo da Cerim (Nosso Campo)</span>
                 </div>
             </div>
 
@@ -318,6 +341,40 @@
                         </div>
                         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; background: var(--color-green-primary); box-shadow: 0 4px 15px rgba(19, 117, 71, 0.3)">
                             Salvar Treinador
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Formulório para Atualizar Placar -->
+                <div class="form-card" style="padding: 2rem; margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1.2rem; font-family: var(--font-heading); color: var(--color-green-light)">Placar de Domingo</h3>
+                    <form id="scoreboard-form">
+                        <div class="form-group">
+                            <label for="score-opponent-input">Adversário *</label>
+                            <input type="text" id="score-opponent-input" class="form-control" placeholder="Ex: Granja Selecta F.C." required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="score-home-input">Gols Dona Catarina *</label>
+                                <input type="number" id="score-home-input" class="form-control" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="score-away-input">Gols Adversário *</label>
+                                <input type="number" id="score-away-input" class="form-control" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="score-date-input">Data do Jogo *</label>
+                                <input type="text" id="score-date-input" class="form-control" placeholder="Ex: 16/08/2026" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="score-location-input">Local *</label>
+                                <input type="text" id="score-location-input" class="form-control" placeholder="Ex: Campo da Cerim" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                            Atualizar Placar
                         </button>
                     </form>
                 </div>

@@ -49,6 +49,15 @@ let isAdminAuthenticated = sessionStorage.getItem('vet_dona_catarina_admin') ===
 let editingPlayerId = null;
 let coachName = localStorage.getItem('vet_dona_catarina_coach') || "A definir";
 
+const defaultLastMatch = {
+    opponent: "Granja Selecta F.C.",
+    homeScore: 3,
+    awayScore: 2,
+    date: "16/08/2026",
+    location: "Campo da Cerim (Nosso Campo)"
+};
+let lastMatch = JSON.parse(localStorage.getItem('vet_dona_catarina_last_match')) || defaultLastMatch;
+
 // Salvar dados no LocalStorage
 function savePlayers() {
     localStorage.setItem('vet_dona_catarina_players', JSON.stringify(players));
@@ -64,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
     renderSquad('todos');
     renderMatches();
+    renderScoreboard();
     initContactForm();
     initAdminForm();
     checkAdminAuthState();
@@ -498,6 +508,56 @@ function initAdminForm() {
             renderSquad('todos');
             showToast("Comissão técnica atualizada!");
         });
+    }
+
+    // Placar do Último Jogo (Administração)
+    const scoreboardForm = document.getElementById('scoreboard-form');
+    if (scoreboardForm) {
+        // Preencher inputs iniciais
+        document.getElementById('score-opponent-input').value = lastMatch.opponent;
+        document.getElementById('score-home-input').value = lastMatch.homeScore;
+        document.getElementById('score-away-input').value = lastMatch.awayScore;
+        document.getElementById('score-date-input').value = lastMatch.date;
+        document.getElementById('score-location-input').value = lastMatch.location;
+
+        scoreboardForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            lastMatch.opponent = document.getElementById('score-opponent-input').value;
+            lastMatch.homeScore = parseInt(document.getElementById('score-home-input').value);
+            lastMatch.awayScore = parseInt(document.getElementById('score-away-input').value);
+            lastMatch.date = document.getElementById('score-date-input').value;
+            lastMatch.location = document.getElementById('score-location-input').value;
+
+            localStorage.setItem('vet_dona_catarina_last_match', JSON.stringify(lastMatch));
+            renderScoreboard();
+            showToast("Placar atualizado com sucesso!");
+        });
+    }
+}
+
+function renderScoreboard() {
+    const homeScoreEl = document.getElementById('score-home');
+    const awayScoreEl = document.getElementById('score-away');
+    const awayNameEl = document.getElementById('score-away-name');
+    const awayLogoEl = document.getElementById('score-away-logo');
+    const dateEl = document.getElementById('scoreboard-date');
+    const locationEl = document.getElementById('scoreboard-location');
+
+    if (homeScoreEl) homeScoreEl.textContent = lastMatch.homeScore;
+    if (awayScoreEl) awayScoreEl.textContent = lastMatch.awayScore;
+    if (awayNameEl) awayNameEl.textContent = lastMatch.opponent;
+    if (dateEl) dateEl.textContent = lastMatch.date;
+    if (locationEl) locationEl.textContent = lastMatch.location;
+
+    // Ajustar logotipo do adversário dinamicamente
+    if (awayLogoEl) {
+        if (lastMatch.opponent.toLowerCase().includes("granja selecta")) {
+            awayLogoEl.src = "img/granja_selecta.png";
+        } else {
+            // Gerar um placeholder com as iniciais do adversário novo
+            awayLogoEl.src = `https://placehold.co/100x100/4a5568/ffffff?text=${encodeURIComponent(lastMatch.opponent.substring(0,2).toUpperCase())}`;
+        }
     }
 }
 
