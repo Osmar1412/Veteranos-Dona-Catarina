@@ -473,7 +473,7 @@ function renderMatches() {
         if (match.opponent.toLowerCase().includes("granja selecta")) {
             opponentLogoHtml = `<img src="img/granja_selecta.png" alt="${match.opponent}" class="match-team-logo">`;
         } else if (match.opponent.toLowerCase().includes("são joão") || match.opponent.toLowerCase().includes("sao joao") || match.opponent.toLowerCase().includes("sjfc")) {
-            opponentLogoHtml = `<img src="img/sao_joao.jpg" alt="${match.opponent}" class="match-team-logo">`;
+            opponentLogoHtml = `<img src="img/sao_joao.jpg?v=2" alt="${match.opponent}" class="match-team-logo">`;
         } else {
             opponentLogoHtml = `
                 <div class="match-team-logo" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:1.5rem;font-family:var(--font-heading)">
@@ -555,7 +555,7 @@ function renderHistory() {
         if (match.opponent.toLowerCase().includes("granja selecta")) {
             opponentLogoHtml = `<img src="img/granja_selecta.png" alt="${match.opponent}" class="history-logo-mini">`;
         } else if (match.opponent.toLowerCase().includes("são joão") || match.opponent.toLowerCase().includes("sao joao") || match.opponent.toLowerCase().includes("sjfc")) {
-            opponentLogoHtml = `<img src="img/sao_joao.jpg" alt="${match.opponent}" class="history-logo-mini">`;
+            opponentLogoHtml = `<img src="img/sao_joao.jpg?v=2" alt="${match.opponent}" class="history-logo-mini">`;
         } else {
             opponentLogoHtml = `
                 <div class="history-logo-mini" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:0.75rem;font-family:var(--font-heading)">
@@ -974,7 +974,7 @@ function renderScoreboard() {
         if (lastPlayedMatch.opponent.toLowerCase().includes("granja selecta")) {
             awayLogoEl.src = "img/granja_selecta.png";
         } else if (lastPlayedMatch.opponent.toLowerCase().includes("são joão") || lastPlayedMatch.opponent.toLowerCase().includes("sao joao") || lastPlayedMatch.opponent.toLowerCase().includes("sjfc")) {
-            awayLogoEl.src = "img/sao_joao.jpg";
+            awayLogoEl.src = "img/sao_joao.jpg?v=2";
         } else {
             // Gerar um placeholder com as iniciais do adversário novo
             awayLogoEl.src = `https://placehold.co/100x100/4a5568/ffffff?text=${encodeURIComponent(lastPlayedMatch.opponent.substring(0,2).toUpperCase())}`;
