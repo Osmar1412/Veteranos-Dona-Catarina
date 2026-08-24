@@ -69,6 +69,24 @@ let isAdminAuthenticated = sessionStorage.getItem('vet_dona_catarina_admin') ===
 let editingPlayerId = null;
 let editingMatchId = null; // Variável de controle para edição de partidas
 let coachName = localStorage.getItem('vet_dona_catarina_coach') || "A definir";
+let currentPlayerPhotoBase64 = "";
+let currentCoachPhotoBase64 = "";
+
+// Helper para obter dados formatados da Comissão Técnica (retrocompatível com strings simples)
+function getCoachData() {
+    let data = { name: "A definir", photo: "" };
+    try {
+        const parsed = JSON.parse(coachName);
+        if (parsed && typeof parsed === 'object' && parsed.name) {
+            data = parsed;
+        } else {
+            data.name = coachName;
+        }
+    } catch (e) {
+        data.name = coachName;
+    }
+    return data;
+}
 
 // Migração de dados legados do LocalStorage (garante compatibilidade)
 let needsSave = false;
@@ -120,6 +138,54 @@ if (typeof firebase !== 'undefined' && firebaseConfig && firebaseConfig.database
     } catch (e) {
         console.error("Erro ao inicializar o Firebase:", e);
     }
+}
+
+// Redimensiona e comprime uma foto usando Canvas para converter em Base64 leve (JPEG, qualidade 0.7, 150x150px)
+function compressAndResizePhoto(file, callback) {
+    if (!file) {
+        callback("");
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const max_size = 150;
+            let width = img.width;
+            let height = img.height;
+
+            // Cortar quadrado perfeito no centro
+            const size = Math.min(width, height);
+            canvas.width = max_size;
+            canvas.height = max_size;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(
+                img,
+                (width - size) / 2,
+                (height - size) / 2,
+                size,
+                size,
+                0,
+                0,
+                max_size,
+                max_size
+            );
+
+            // Converter para JPEG compactado a 70% (fica entre 5 KB e 15 KB)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            callback(dataUrl);
+        };
+        img.onerror = function() {
+            callback("");
+        };
+        img.src = e.target.result;
+    };
+    reader.onerror = function() {
+        callback("");
+    };
+    reader.readAsDataURL(file);
 }
 
 // Salvar dados no LocalStorage e no Firebase
@@ -187,7 +253,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             renderSquad('todos');
             const coachInput = document.getElementById('coach-name-input');
-            if (coachInput) coachInput.value = coachName === "A definir" ? "" : coachName;
+            if (coachInput) {
+                const coachData = getCoachData();
+                coachInput.value = coachData.name === "A definir" ? "" : coachData.name;
+                const coachPhotoPreview = document.getElementById('coach-photo-preview');
+                if (coachData.photo && coachPhotoPreview) {
+                    currentCoachPhotoBase64 = coachData.photo;
+                    coachPhotoPreview.innerHTML = `<img src="${coachData.photo}" alt="Preview">`;
+                }
+            }
         });
     } else {
         // Fallback local caso Firebase não esteja configurado
@@ -262,19 +336,24 @@ function renderSquad(filter = 'todos') {
 
     // Renderizar Treinador (Comissão Técnica) no topo se o filtro for 'todos'
     if (filter === 'todos') {
+        const coachData = getCoachData();
         const coachCard = document.createElement('div');
         coachCard.className = 'player-card coach-card';
         coachCard.style.borderLeft = '4px solid var(--color-gold)';
         
+        const photoHtml = coachData.photo 
+            ? `<img src="${coachData.photo}" class="player-photo" alt="${coachData.name}">`
+            : `<svg class="player-avatar-svg" viewBox="0 0 24 24" style="fill: var(--color-gold)">
+                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+               </svg>`;
+        
         coachCard.innerHTML = `
             <div class="player-number" style="color: rgba(241, 196, 15, 0.15)">📋</div>
             <div class="player-photo-container" style="border-color: var(--color-gold)">
-                <svg class="player-avatar-svg" viewBox="0 0 24 24" style="fill: var(--color-gold)">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
+                ${photoHtml}
             </div>
             <div class="player-info">
-                <h3 class="player-name">${coachName}</h3>
+                <h3 class="player-name">${coachData.name}</h3>
                 <span class="player-position" style="color: var(--color-gold)">Treinador</span>
                 <div>
                     <span class="player-jersey-number" style="background: rgba(241, 196, 15, 0.1); color: var(--color-gold)">Comissão Técnica</span>
@@ -314,13 +393,16 @@ function renderSquad(filter = 'todos') {
             case 'ataque': positionLabel = 'Atacante'; break;
         }
 
+        const photoHtml = player.photo 
+            ? `<img src="${player.photo}" class="player-photo" alt="${player.name}">`
+            : `<svg class="player-avatar-svg" viewBox="0 0 24 24">
+                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+               </svg>`;
+
         card.innerHTML = `
             <div class="player-number">${player.number}</div>
             <div class="player-photo-container">
-                <!-- SVG de silhueta masculina padrão premium -->
-                <svg class="player-avatar-svg" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
+                ${photoHtml}
             </div>
             <div class="player-info">
                 <h3 class="player-name">${player.name}</h3>
@@ -634,6 +716,7 @@ function initAdminForm() {
                     players[playerIndex].name = name;
                     players[playerIndex].number = number;
                     players[playerIndex].position = position;
+                    players[playerIndex].photo = currentPlayerPhotoBase64;
                     showToast(`Dados de ${name} atualizados!`);
                 }
             } else {
@@ -642,7 +725,8 @@ function initAdminForm() {
                     id: Date.now(),
                     name,
                     number,
-                    position
+                    position,
+                    photo: currentPlayerPhotoBase64
                 };
                 players.push(newPlayer);
                 showToast(`Jogador ${name} cadastrado com sucesso!`);
@@ -652,6 +736,41 @@ function initAdminForm() {
             renderSquad('todos');
             renderAdminPlayersTable();
             resetAdminForm();
+        });
+    }
+
+    // Ouvintes para Inputs de Fotos
+    const playerPhotoInput = document.getElementById('player-photo-input');
+    const playerPhotoPreview = document.getElementById('player-photo-preview');
+    if (playerPhotoInput && playerPhotoPreview) {
+        playerPhotoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                compressAndResizePhoto(file, (base64) => {
+                    currentPlayerPhotoBase64 = base64;
+                    playerPhotoPreview.innerHTML = `<img src="${base64}" alt="Preview">`;
+                });
+            } else {
+                currentPlayerPhotoBase64 = "";
+                playerPhotoPreview.innerHTML = `<span>Sem foto selecionada</span>`;
+            }
+        });
+    }
+
+    const coachPhotoInput = document.getElementById('coach-photo-input');
+    const coachPhotoPreview = document.getElementById('coach-photo-preview');
+    if (coachPhotoInput && coachPhotoPreview) {
+        coachPhotoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                compressAndResizePhoto(file, (base64) => {
+                    currentCoachPhotoBase64 = base64;
+                    coachPhotoPreview.innerHTML = `<img src="${base64}" alt="Preview">`;
+                });
+            } else {
+                currentCoachPhotoBase64 = "";
+                coachPhotoPreview.innerHTML = `<span>Sem foto selecionada</span>`;
+            }
         });
     }
 
@@ -710,13 +829,22 @@ function initAdminForm() {
     if (coachForm) {
         const coachInput = document.getElementById('coach-name-input');
         if (coachInput) {
-            coachInput.value = coachName === "A definir" ? "" : coachName;
+            const coachData = getCoachData();
+            coachInput.value = coachData.name === "A definir" ? "" : coachData.name;
+            if (coachData.photo && coachPhotoPreview) {
+                currentCoachPhotoBase64 = coachData.photo;
+                coachPhotoPreview.innerHTML = `<img src="${coachData.photo}" alt="Preview">`;
+            }
         }
 
         coachForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const newCoachName = document.getElementById('coach-name-input').value;
-            coachName = newCoachName || "A definir";
+            const newCoach = {
+                name: newCoachName || "A definir",
+                photo: currentCoachPhotoBase64
+            };
+            coachName = JSON.stringify(newCoach);
             localStorage.setItem('vet_dona_catarina_coach', coachName);
             if (useFirebase && db) {
                 db.ref('coach').set(coachName);
@@ -983,9 +1111,16 @@ function renderAdminPlayersTable() {
             case 'ataque': positionLabel = 'Atacante'; break;
         }
 
+        const imgHtml = player.photo 
+            ? `<img src="${player.photo}" class="admin-table-thumb" alt="${player.name}">`
+            : `<div class="admin-table-thumb" style="display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;background:#1a201c;color:#a0aec0">👤</div>`;
+
         row.innerHTML = `
             <td>${player.number}</td>
-            <td><strong>${player.name}</strong></td>
+            <td>
+                ${imgHtml}
+                <strong>${player.name}</strong>
+            </td>
             <td>${positionLabel}</td>
             <td>
                 <button class="btn-secondary btn-edit" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem;" data-id="${player.id}">Editar</button>
@@ -1018,6 +1153,18 @@ function startEditPlayer(id) {
     document.getElementById('player-number-input').value = player.number;
     document.getElementById('player-position-select').value = player.position;
 
+    // Carregar foto no preview se houver
+    const previewBox = document.getElementById('player-photo-preview');
+    if (previewBox) {
+        if (player.photo) {
+            currentPlayerPhotoBase64 = player.photo;
+            previewBox.innerHTML = `<img src="${player.photo}" alt="Preview">`;
+        } else {
+            currentPlayerPhotoBase64 = "";
+            previewBox.innerHTML = `<span>Sem foto selecionada</span>`;
+        }
+    }
+
     // Mudar visual do formulário para Edição
     const formTitle = document.getElementById('admin-form-title');
     const submitBtn = document.getElementById('player-form-submit-btn');
@@ -1036,6 +1183,12 @@ function resetAdminForm() {
     if (form) form.reset();
     
     editingPlayerId = null;
+    currentPlayerPhotoBase64 = "";
+
+    const previewBox = document.getElementById('player-photo-preview');
+    if (previewBox) {
+        previewBox.innerHTML = `<span>Sem foto selecionada</span>`;
+    }
     
     const formTitle = document.getElementById('admin-form-title');
     const submitBtn = document.getElementById('player-form-submit-btn');

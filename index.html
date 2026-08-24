@@ -9,7 +9,7 @@
     <meta name="author" content="E.C. Vet. Dona Catarina">
     
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="styles.css?v=8">
+    <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 
@@ -331,6 +331,18 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="player-photo-input">Foto do Atleta (Opcional)</label>
+                            <div class="photo-upload-container">
+                                <label class="btn-secondary" style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem; margin-top: 0;">
+                                    📷 Selecionar Foto
+                                    <input type="file" id="player-photo-input" accept="image/*" style="display:none;">
+                                </label>
+                                <div class="photo-preview-box" id="player-photo-preview">
+                                    <span>Sem foto selecionada</span>
+                                </div>
+                            </div>
+                        </div>
                         <button type="submit" id="player-form-submit-btn" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
                             Salvar no Elenco
                         </button>
@@ -347,6 +359,18 @@
                         <div class="form-group">
                             <label for="coach-name-input">Nome do Treinador *</label>
                             <input type="text" id="coach-name-input" class="form-control" placeholder="Ex: Professor Luxemburgo" required>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="coach-photo-input">Foto do Treinador (Opcional)</label>
+                            <div class="photo-upload-container">
+                                <label class="btn-secondary" style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem; margin-top: 0;">
+                                    📷 Selecionar Foto
+                                    <input type="file" id="coach-photo-input" accept="image/*" style="display:none;">
+                                </label>
+                                <div class="photo-preview-box" id="coach-photo-preview">
+                                    <span>Sem foto selecionada</span>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; background: var(--color-green-primary); box-shadow: 0 4px 15px rgba(19, 117, 71, 0.3)">
                             Salvar Treinador
@@ -505,6 +529,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <!-- Script Principal -->
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>

@@ -1350,3 +1350,56 @@ footer {
     }
 }
 
+/* Fotos do Elenco e Comissão Técnica */
+.player-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.photo-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    padding: 0.8rem;
+    border-radius: var(--border-radius-sm);
+    margin-top: 0.2rem;
+}
+
+.photo-preview-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #1a201c;
+    border: 2px solid var(--color-glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 0.6rem;
+    color: #a0aec0;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.photo-preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-table-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #1a201c;
+    border: 1px solid var(--color-glass-border);
+    vertical-align: middle;
+    margin-right: 0.5rem;
+    display: inline-block;
+}
+
