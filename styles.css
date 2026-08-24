@@ -422,7 +422,7 @@ main {
 /* Próximos Compromissos (Jogos) */
 .matches-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 2rem;
 }
 
@@ -1068,6 +1068,35 @@ footer {
     
     .form-row {
         grid-template-columns: 1fr;
+    }
+
+    /* Ajustes Admin para Mobile */
+    .admin-dashboard {
+        gap: 1.5rem;
+    }
+
+    .form-card {
+        padding: 1.5rem;
+    }
+
+    .admin-table-card {
+        padding: 1rem;
+    }
+
+    .admin-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .admin-actions button,
+    .admin-actions label {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        display: flex;
+        margin: 0;
     }
 }
 
