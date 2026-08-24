@@ -97,13 +97,14 @@ if (needsSave) {
 // ==========================================================================
 // O usuário deve colar suas chaves do Firebase aqui para ativar a sincronização em nuvem.
 const firebaseConfig = {
-    apiKey: "",
-    authDomain: "",
-    databaseURL: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
+    apiKey: "AIzaSyDogILsqobZ2vdtKBEB5N05RvXrd-fZFso",
+    authDomain: "veteranos-dona-catarina.firebaseapp.com",
+    databaseURL: "https://veteranos-dona-catarina-default-rtdb.firebaseio.com",
+    projectId: "veteranos-dona-catarina",
+    storageBucket: "veteranos-dona-catarina.firebasestorage.app",
+    messagingSenderId: "334749241707",
+    appId: "1:334749241707:web:b9b9a05d86a4a4ae69fc2e",
+    measurementId: "G-1VQJD0WRMS"
 };
 
 // Inicializar Firebase
