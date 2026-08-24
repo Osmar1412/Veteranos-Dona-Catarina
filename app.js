@@ -92,26 +92,109 @@ if (needsSave) {
     localStorage.setItem('vet_dona_catarina_matches', JSON.stringify(matches));
 }
 
-// Salvar dados no LocalStorage
+// ==========================================================================
+// CONFIGURAÇÃO DO FIREBASE (NUVEM)
+// ==========================================================================
+// O usuário deve colar suas chaves do Firebase aqui para ativar a sincronização em nuvem.
+const firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+};
+
+// Inicializar Firebase
+let db = null;
+let useFirebase = false;
+
+if (typeof firebase !== 'undefined' && firebaseConfig && firebaseConfig.databaseURL) {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        useFirebase = true;
+        console.log("Firebase conectado e pronto para sincronizar em nuvem!");
+    } catch (e) {
+        console.error("Erro ao inicializar o Firebase:", e);
+    }
+}
+
+// Salvar dados no LocalStorage e no Firebase
 function savePlayers() {
     localStorage.setItem('vet_dona_catarina_players', JSON.stringify(players));
+    if (useFirebase && db) {
+        db.ref('players').set(players);
+    }
 }
 
 function saveMatches() {
     localStorage.setItem('vet_dona_catarina_matches', JSON.stringify(matches));
+    if (useFirebase && db) {
+        db.ref('matches').set(matches);
+    }
 }
 
 // Inicializar aplicação
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initMobileMenu();
-    renderSquad('todos');
-    renderMatches();
-    renderScoreboard();
-    renderHistory();
     initContactForm();
     initAdminForm();
     checkAdminAuthState();
+
+    if (useFirebase && db) {
+        // Escutar elenco em tempo real
+        db.ref('players').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                players = val;
+            } else {
+                // Banco vazio, popular com dados padrão
+                players = defaultPlayers;
+                db.ref('players').set(defaultPlayers);
+            }
+            renderSquad('todos');
+            renderAdminPlayersTable();
+        });
+
+        // Escutar partidas em tempo real
+        db.ref('matches').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                matches = val;
+            } else {
+                // Banco vazio, popular com dados padrão
+                matches = defaultMatches;
+                db.ref('matches').set(defaultMatches);
+            }
+            renderMatches();
+            renderHistory();
+            renderScoreboard();
+            renderAdminMatchesTable();
+        });
+
+        // Escutar treinador em tempo real
+        db.ref('coach').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                coachName = val;
+            } else {
+                coachName = "A definir";
+                db.ref('coach').set("A definir");
+            }
+            renderSquad('todos');
+            const coachInput = document.getElementById('coach-name-input');
+            if (coachInput) coachInput.value = coachName === "A definir" ? "" : coachName;
+        });
+    } else {
+        // Fallback local caso Firebase não esteja configurado
+        renderSquad('todos');
+        renderMatches();
+        renderScoreboard();
+        renderHistory();
+    }
 });
 
 /* ==========================================================================
@@ -630,7 +713,11 @@ function initAdminForm() {
             const newCoachName = document.getElementById('coach-name-input').value;
             coachName = newCoachName || "A definir";
             localStorage.setItem('vet_dona_catarina_coach', coachName);
-            renderSquad('todos');
+            if (useFirebase && db) {
+                db.ref('coach').set(coachName);
+            } else {
+                renderSquad('todos');
+            }
             showToast("Comissão técnica atualizada!");
         });
     }
