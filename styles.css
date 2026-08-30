@@ -15,6 +15,7 @@
     --color-glass-bg: rgba(255, 255, 255, 0.05);
     --color-glass-border: rgba(255, 255, 255, 0.08);
     --color-gold: #f1c40f;
+    --color-gold-primary: var(--color-gold);
     
     /* Tipografia e Espaçamentos */
     --font-heading: 'Outfit', sans-serif;
