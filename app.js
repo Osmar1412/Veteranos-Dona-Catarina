@@ -1352,31 +1352,42 @@ function drawCanvasRoundedRect(ctx, x, y, width, height, radius, fillStyle, stro
     }
 }
 
-// Função auxiliar para desenhar faixas com cantos chanfrados (estilo sci-fi/tecnológico)
-function drawTechBanner(ctx, x, y, width, height, cutSize, fillColor, borderColor) {
+// Desenha faixas com cantos arredondados e sombra realista premium
+function drawPremiumRoundedRect(ctx, x, y, width, height, radius, fillColor, borderColor, shadowColor, shadowBlur, shadowOffsetY) {
+    ctx.save();
+    if (shadowColor) {
+        ctx.shadowColor = shadowColor;
+        ctx.shadowBlur = shadowBlur || 10;
+        ctx.shadowOffsetY = shadowOffsetY || 3;
+        ctx.shadowOffsetX = 0;
+    }
+    
     ctx.beginPath();
-    ctx.moveTo(x + cutSize, y);
-    ctx.lineTo(x + width - cutSize, y);
-    ctx.lineTo(x + width, y + cutSize);
-    ctx.lineTo(x + width, y + height - cutSize);
-    ctx.lineTo(x + width - cutSize, y + height);
-    ctx.lineTo(x + cutSize, y + height);
-    ctx.lineTo(x, y + height - cutSize);
-    ctx.lineTo(x, y + cutSize);
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
     ctx.closePath();
     
     if (fillColor) {
         ctx.fillStyle = fillColor;
         ctx.fill();
     }
+    
+    ctx.restore(); // Desativa sombra para desenhar a borda sem borrão
+
     if (borderColor) {
         ctx.strokeStyle = borderColor;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
     }
 }
 
-// Função principal de desenho do Card no Canvas (Estilo Futurista/Gamer)
 // Desenha um pentágono para o padrão da bola de futebol
 function drawCanvasPentagon(ctx, x, y, r) {
     ctx.beginPath();
@@ -1385,10 +1396,10 @@ function drawCanvasPentagon(ctx, x, y, r) {
         ctx.lineTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
     }
     ctx.closePath();
-    ctx.fillStyle = '#111612';
+    ctx.fillStyle = '#161d18';
     ctx.fill();
     ctx.lineWidth = 2;
-    ctx.strokeStyle = '#1e2920';
+    ctx.strokeStyle = '#222d25';
     ctx.stroke();
 }
 
@@ -1396,11 +1407,11 @@ function drawCanvasPentagon(ctx, x, y, r) {
 function drawCanvasSoccerBall(ctx, cx, cy, r) {
     ctx.save();
     
-    // Gradiente esférico para dar tridimensionalidade
+    // Gradiente esférico realista
     const ballGrad = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, 0, cx, cy, r);
     ballGrad.addColorStop(0, '#ffffff');
-    ballGrad.addColorStop(0.7, '#cbd5e0');
-    ballGrad.addColorStop(1, '#68756c');
+    ballGrad.addColorStop(0.75, '#cbd5e0');
+    ballGrad.addColorStop(1, '#535d56');
     
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, 2*Math.PI);
@@ -1408,14 +1419,14 @@ function drawCanvasSoccerBall(ctx, cx, cy, r) {
     ctx.fill();
     
     ctx.lineWidth = 2.5;
-    ctx.strokeStyle = '#1a201c';
+    ctx.strokeStyle = '#111613';
     ctx.stroke();
     ctx.clip();
 
     // Pentagono central
     drawCanvasPentagon(ctx, cx, cy, r * 0.35);
 
-    // Linhas estendidas
+    // Linhas estendidas da bola
     const angleStep = (2 * Math.PI) / 5;
     const offsetAngle = -Math.PI / 2;
     for (let i = 0; i < 5; i++) {
@@ -1430,10 +1441,10 @@ function drawCanvasSoccerBall(ctx, cx, cy, r) {
         ctx.lineTo(ex, ey);
         ctx.stroke();
 
-        // Puffs/Pentágonos pretos das bordas
+        // Gomos pretos nas bordas
         ctx.beginPath();
         ctx.arc(ex, ey, r * 0.28, 0, 2*Math.PI);
-        ctx.fillStyle = '#111612';
+        ctx.fillStyle = '#161d18';
         ctx.fill();
         ctx.stroke();
     }
@@ -1441,12 +1452,12 @@ function drawCanvasSoccerBall(ctx, cx, cy, r) {
     ctx.restore();
 }
 
-// Desenha nuvens de fumaça sutil para dar atmosfera ao estádio
+// Desenha fumaça de estádio realista para o fundo
 function drawSmokePuff(ctx, cx, cy, r) {
     ctx.save();
     const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    grad.addColorStop(0, 'rgba(12, 28, 18, 0.4)'); // Fumaça verde-escura
-    grad.addColorStop(0.5, 'rgba(5, 12, 8, 0.18)');
+    grad.addColorStop(0, 'rgba(15, 30, 22, 0.45)');
+    grad.addColorStop(0.5, 'rgba(8, 18, 12, 0.2)');
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -1455,53 +1466,41 @@ function drawSmokePuff(ctx, cx, cy, r) {
     ctx.restore();
 }
 
-// Desenha banco de refletores (bulbos emissores de luz em grade)
-function drawSpotlightCluster(ctx, cx, cy) {
+// Desenha feixes de refletores realistas e esfumados (Luz volumétrica)
+function drawHazySpotlight(ctx, cx, cy, dirX) {
     ctx.save();
-    // Glow circular difuso
-    const backing = ctx.createRadialGradient(cx, cy, 0, cx, cy, 140);
-    backing.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
-    backing.addColorStop(0.4, 'rgba(0, 255, 102, 0.09)');
-    backing.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = backing;
+    
+    // Halo luminoso do refletor
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 180);
+    glow.addColorStop(0, 'rgba(255, 255, 255, 0.32)');
+    glow.addColorStop(0.3, 'rgba(255, 255, 255, 0.08)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(cx, cy, 140, 0, 2*Math.PI);
+    ctx.arc(cx, cy, 180, 0, 2*Math.PI);
     ctx.fill();
 
-    // Linhas de feixe de luz principal dos refletores
+    // Feixe de luz volumétrico descendo
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    if (cx < 300) {
-        ctx.lineTo(-50, 600);
-        ctx.lineTo(280, 600);
-    } else {
-        ctx.lineTo(320, 600);
-        ctx.lineTo(650, 600);
-    }
+    ctx.lineTo(cx + dirX - 120, 600);
+    ctx.lineTo(cx + dirX + 120, 600);
     ctx.closePath();
-    const beam = ctx.createLinearGradient(cx, cy, cx < 300 ? 100 : 500, 600);
-    beam.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+    
+    const beam = ctx.createLinearGradient(cx, cy, cx + dirX, 600);
+    beam.addColorStop(0, 'rgba(255, 255, 255, 0.06)');
     beam.addColorStop(1, 'rgba(255, 255, 255, 0)');
     ctx.fillStyle = beam;
     ctx.fill();
-
-    // Grade de bulbos emissores (2 linhas por 4 colunas)
-    const rows = 2;
-    const cols = 4;
-    const spacing = 12;
+    
+    // Pequeno brilho concentrado no ponto do refletor
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, 2*Math.PI);
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 15;
+    ctx.fill();
     
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            const bx = cx + (c - (cols - 1) / 2) * spacing;
-            const by = cy + (r - (rows - 1) / 2) * spacing;
-            ctx.beginPath();
-            ctx.arc(bx, by, 3.5, 0, 2*Math.PI);
-            ctx.fill();
-        }
-    }
     ctx.restore();
 }
 
@@ -1512,12 +1511,12 @@ async function generateMatchCardUrl(config) {
     canvas.height = 600;
     const ctx = canvas.getContext('2d');
 
-    // 1. Fundo do Estádio (Gradiente de atmosfera escura)
+    // 1. Atmosfera do Estádio (Céu escuro degradê)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, 600);
-    skyGrad.addColorStop(0, '#010502'); // Topo preto absoluto
-    skyGrad.addColorStop(0.5, '#041007'); // Verde escuro
-    skyGrad.addColorStop(0.8, '#082110'); 
-    skyGrad.addColorStop(1, '#082613'); 
+    skyGrad.addColorStop(0, '#010503'); // Preto absoluto no topo
+    skyGrad.addColorStop(0.5, '#05140b'); // Verde profundo escuro
+    skyGrad.addColorStop(0.8, '#0a2313');
+    skyGrad.addColorStop(1, '#0b2615');
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, 600, 600);
 
@@ -1525,18 +1524,18 @@ async function generateMatchCardUrl(config) {
     const pitchY = 420;
     const pitchHeight = 180;
     const grassGrad = ctx.createLinearGradient(0, pitchY, 0, 600);
-    grassGrad.addColorStop(0, '#082e16');
-    grassGrad.addColorStop(1, '#020f07');
+    grassGrad.addColorStop(0, '#093118'); // Verde grama médio
+    grassGrad.addColorStop(1, '#03140a'); // Verde grama escuro na base
     ctx.fillStyle = grassGrad;
     ctx.fillRect(0, pitchY, 600, pitchHeight);
 
-    // Desenhar listras do gramado em perspectiva
+    // Desenha listras em perspectiva no gramado
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, pitchY, 600, pitchHeight);
     ctx.clip();
     
-    const vpX = 300; // Ponto de fuga
+    const vpX = 300; // Ponto de fuga centralizado
     const vpY = 380;
     
     ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
@@ -1550,108 +1549,76 @@ async function generateMatchCardUrl(config) {
     }
     ctx.restore();
 
-    // 3. Efeito de Fumaça/Neblina no fundo
-    drawSmokePuff(ctx, 100, 480, 140);
-    drawSmokePuff(ctx, 500, 480, 140);
-    drawSmokePuff(ctx, 300, 520, 160);
+    // 3. Névoa e Fumaça para suavizar divisões e dar realismo
+    drawSmokePuff(ctx, 100, 480, 150);
+    drawSmokePuff(ctx, 500, 480, 150);
+    drawSmokePuff(ctx, 300, 520, 170);
 
-    // 4. Refletores acesos (Bulbos de luz de estádio + feixes)
-    drawSpotlightCluster(ctx, 60, 60);
-    drawSpotlightCluster(ctx, 540, 60);
+    // 4. Refletores acesos (Luz volumétrica esfumada)
+    drawHazySpotlight(ctx, 60, 50, 120);
+    drawHazySpotlight(ctx, 540, 50, -120);
 
-    // 5. Linha da grande área (penalty box) e Bola de Futebol Realista
+    // 5. Linha branca da grande área e Bola 3D no rodapé
     ctx.beginPath();
     ctx.arc(300, 590, 135, Math.PI, 2*Math.PI);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.lineWidth = 3.5;
     ctx.stroke();
 
     drawCanvasSoccerBall(ctx, 300, 590, 75);
 
-    // 6. Grade e Efeitos Ciber-Futuristas (Sobrepostos de forma sutil)
-    ctx.strokeStyle = 'rgba(0, 255, 102, 0.035)'; // Cyber grid de fundo
-    ctx.lineWidth = 1;
-    const gridSize = 40;
-    for (let x = 0; x <= 600; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0); ctx.lineTo(x, 600);
-        ctx.stroke();
-    }
-    for (let y = 0; y <= 600; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y); ctx.lineTo(600, y);
-        ctx.stroke();
-    }
-
-    // Linhas em cruz douradas (HUD)
-    ctx.strokeStyle = 'rgba(241, 196, 15, 0.08)';
-    ctx.beginPath();
-    ctx.moveTo(0, 0); ctx.lineTo(160, 160);
-    ctx.moveTo(600, 0); ctx.lineTo(440, 160);
-    ctx.moveTo(0, 600); ctx.lineTo(160, 440);
-    ctx.moveTo(600, 600); ctx.lineTo(440, 440);
-    ctx.stroke();
-
-    // Lasers neon brilhantes
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0, 255, 102, 0.15)';
-    ctx.lineWidth = 2;
-    ctx.shadowColor = '#00ff66';
-    ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.moveTo(0, 120); ctx.lineTo(600, 120); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, 520); ctx.lineTo(600, 520); ctx.stroke();
-    ctx.restore();
-
-    // 7. Carregar e Desenhar Brasão Dona Catarina (Esquerda)
+    // 6. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Badge 3D Flutuante)
     const logoDonaCatarina = await loadCardImage('img/brasao.jpg?v=2');
     const xDonaCatarina = 150;
-    const yLogos = 250;
+    const yLogos = 240;
     const rLogos = 65;
 
     ctx.save();
+    // Efeito de sombra projetada física (Drop Shadow)
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+    ctx.shadowBlur = 16;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 6;
+
+    // Fundo do círculo
     ctx.beginPath();
     ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
+    ctx.fillStyle = '#093b1f';
+    ctx.fill();
+
+    // Corta e desenha a imagem do brasão
+    ctx.save();
     ctx.clip();
     if (logoDonaCatarina) {
         ctx.drawImage(logoDonaCatarina, xDonaCatarina - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
-    } else {
-        ctx.fillStyle = '#093b1f';
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px Montserrat, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('DC', xDonaCatarina, yLogos);
     }
     ctx.restore();
 
-    // Anel Dourado Sólido (Interno)
+    // Borda de Ouro sólida e premium
     ctx.beginPath();
     ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 4;
     ctx.stroke();
-
-    // Anel de Neon Verde Tracejado (Externo)
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(xDonaCatarina, yLogos, rLogos + 8, 0, 2*Math.PI);
-    ctx.strokeStyle = '#00ff66';
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = '#00ff66';
-    ctx.shadowBlur = 8;
-    ctx.setLineDash([6, 6]);
-    ctx.stroke();
     ctx.restore();
 
-    // 8. Carregar e Desenhar Brasão do Adversário (Direita)
+    // 7. Carregar e Desenhar Brasão do Adversário (Direita - Badge 3D Flutuante)
     const opponentLogoUrl = getOpponentLogoUrlForCard(config.opponent);
     const logoOpponent = opponentLogoUrl ? await loadCardImage(opponentLogoUrl) : null;
     const xOpponent = 450;
 
     ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+    ctx.shadowBlur = 16;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 6;
+
     ctx.beginPath();
     ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
+    ctx.fillStyle = '#1e293b';
+    ctx.fill();
+
+    ctx.save();
     ctx.clip();
     if (logoOpponent) {
         ctx.drawImage(logoOpponent, xOpponent - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
@@ -1667,93 +1634,76 @@ async function generateMatchCardUrl(config) {
     }
     ctx.restore();
 
-    // Anel Branco Sólido (Interno)
+    // Borda de Prata sólida
     ctx.beginPath();
     ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 4;
     ctx.stroke();
-
-    // Anel de Neon Vermelho Tracejado (Externo)
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(xOpponent, yLogos, rLogos + 8, 0, 2*Math.PI);
-    ctx.strokeStyle = '#ff003c';
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = '#ff003c';
-    ctx.shadowBlur = 8;
-    ctx.setLineDash([6, 6]);
-    ctx.stroke();
     ctx.restore();
 
-    // 9. Texto "VS" centralizado com Brilho Neon Dourado
+    // 8. Separador "VS" com sombra realista (Sem adornos virtuais)
     ctx.save();
-    ctx.font = 'italic bold 48px Impact, Arial Black, sans-serif';
-    ctx.fillStyle = '#f1c40f'; // Dourado
+    ctx.font = 'italic bold 52px Impact, sans-serif';
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#f1c40f';
-    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
     ctx.fillText('VS', 300, yLogos);
     ctx.restore();
 
-    // Detalhes de mira tecnológica ao redor do VS
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(275, yLogos - 15); ctx.lineTo(275, yLogos - 25); ctx.lineTo(285, yLogos - 25);
-    ctx.moveTo(325, yLogos - 15); ctx.lineTo(325, yLogos - 25); ctx.lineTo(315, yLogos - 25);
-    ctx.moveTo(275, yLogos + 15); ctx.lineTo(275, yLogos + 25); ctx.lineTo(285, yLogos + 25);
-    ctx.moveTo(325, yLogos + 15); ctx.lineTo(325, yLogos + 25); ctx.lineTo(315, yLogos + 25);
-    ctx.stroke();
-
-    // 10. Título Principal (AMISTOSO / CAMPEONATO)
+    // 9. Título da Partida (AMISTOSO / CAMPEONATO) em Branco Premium
     ctx.save();
-    ctx.font = 'italic bold 64px Impact, Arial Black, sans-serif';
+    ctx.font = 'italic bold 68px Impact, Arial Black, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.shadowColor = '#00ff66';
-    ctx.shadowBlur = 20;
     
-    // Borda do texto
+    // Sombra de contraste
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    
+    // Contorno do texto
     ctx.strokeStyle = '#020503';
     ctx.lineWidth = 6;
-    ctx.strokeText(config.type, 300, 38);
+    ctx.strokeText(config.type, 300, 32);
     
-    // Preenchimento
+    // Texto
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(config.type, 300, 38);
+    ctx.fillText(config.type, 300, 32);
     ctx.restore();
 
-    // 11. Faixa de DATA (Estilo Tech Chanfrada Preta e Neon Verde)
+    // 10. Faixa de DATA (Pílula de Vidro Escuro e Dourado)
     const dateText = config.date.toUpperCase();
-    drawTechBanner(ctx, 110, 350, 380, 44, 8, 'rgba(11, 22, 16, 0.95)', '#00ff66');
+    drawPremiumRoundedRect(ctx, 110, 340, 380, 44, 8, 'rgba(10, 18, 14, 0.9)', 'rgba(255, 255, 255, 0.1)', 'rgba(0,0,0,0.4)', 8, 3);
     
     ctx.font = 'bold 20px Montserrat, Arial, sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`📅  ${dateText}`, 300, 372);
+    ctx.fillText(`📅  ${dateText}`, 300, 362);
 
-    // 12. Faixa de LOCAL E HORA (Estilo Tech Chanfrada Vermelha e Dourada)
+    // 11. Faixa de LOCAL E HORA (Pílula Branca Contrastante)
     const localText = `${config.location.toUpperCase()}  -  ${config.time.toUpperCase()}`;
-    drawTechBanner(ctx, 50, 415, 500, 46, 10, 'rgba(204, 31, 31, 0.95)', '#f1c40f');
+    drawPremiumRoundedRect(ctx, 50, 405, 500, 46, 8, '#ffffff', null, 'rgba(0,0,0,0.4)', 10, 3);
     
     ctx.font = 'bold 20px Montserrat, Arial, sans-serif';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#0a170f'; // Escuro para contraste na faixa branca
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`📍  ${localText}`, 300, 438);
+    ctx.fillText(`📍  ${localText}`, 300, 428);
 
-    // 13. Faixa de CHAMADA / INFORMAÇÃO (Estilo Tech Chanfrada Verde Escuro e Branca)
+    // 12. Faixa de CHAMADA / INFORMAÇÃO (Pílula Verde do Clube)
     const footerText = config.footer.toUpperCase();
-    drawTechBanner(ctx, 80, 480, 440, 40, 8, 'rgba(9, 59, 31, 0.95)', '#ffffff');
+    drawPremiumRoundedRect(ctx, 80, 470, 440, 40, 8, '#137547', null, 'rgba(0,0,0,0.4)', 8, 3);
     
     ctx.font = 'bold 15px Montserrat, Arial, sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(footerText, 300, 500);
+    ctx.fillText(footerText, 300, 490);
 
     return canvas.toDataURL('image/png');
 }
