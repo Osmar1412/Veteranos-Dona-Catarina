@@ -1038,7 +1038,8 @@ function renderAdminMatchesTable() {
             <td>${match.location} (${mandoLabel})</td>
             <td>${statusLabel}</td>
             <td>
-                <button class="btn-secondary btn-edit-match" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem;" data-id="${match.id}">Editar</button>
+                <button class="btn-secondary btn-edit-match" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; margin-right: 0.3rem;" data-id="${match.id}">Editar</button>
+                <button class="btn-secondary btn-card-match" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600; margin-right: 0.3rem; background: var(--color-gold-primary); color: #000; border-color: var(--color-gold-primary);" data-id="${match.id}">Card</button>
                 <button class="btn-danger btn-delete-match" data-id="${match.id}">Remover</button>
             </td>
         `;
@@ -1046,6 +1047,11 @@ function renderAdminMatchesTable() {
         // Evento de edição de jogo
         row.querySelector('.btn-edit-match').addEventListener('click', () => {
             startEditMatch(match.id);
+        });
+
+        // Evento de gerar card do jogo
+        row.querySelector('.btn-card-match').addEventListener('click', () => {
+            openCardGenerator(match);
         });
 
         // Evento de exclusão de jogo
@@ -1273,3 +1279,413 @@ function showToast(message, isError = false) {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+/* ==========================================================================
+   GERADOR DE CARDS PARA WHATSAPP
+   ========================================================================== */
+
+// Helper para carregar imagens assincronamente com promessas
+function loadCardImage(src) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // Evita "tainted canvas" com imagens externas
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+    });
+}
+
+// Converte data DD/MM/YYYY para formato textual "DOMINGO 30/08"
+function getDayOfWeekAndDateString(dateStr) {
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        const dateObj = new Date(year, month, day);
+        const daysOfWeek = ["DOMINGO", "SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO"];
+        const dayName = daysOfWeek[isNaN(dateObj.getDay()) ? 0 : dateObj.getDay()];
+        const formattedDate = `${parts[0]}/${parts[1]}`;
+        return `${dayName} ${formattedDate}`;
+    }
+    return dateStr;
+}
+
+// Retorna a URL do brasão do adversário
+function getOpponentLogoUrlForCard(opponentName) {
+    const name = opponentName.toLowerCase();
+    if (name.includes("granja selecta")) {
+        return "img/granja_selecta.png";
+    } else if (name.includes("são joão") || name.includes("sao joao") || name.includes("sjfc")) {
+        return "img/sao_joao.jpg?v=2";
+    } else if (name.includes("são josé") || name.includes("sao jose") || name.includes("vsjfc")) {
+        return "img/sao_jose.jpg?v=2";
+    } else if (name.includes("inimigos do fim") || name.includes("inimigos")) {
+        return "img/inimigos_do_fim.jpg?v=2";
+    } else if (name.includes("gráfica fm") || name.includes("grafica fm") || name.includes("gráfica") || name.includes("grafica")) {
+        return "img/grafica_fm.jpg?v=2";
+    }
+    return "";
+}
+
+// Desenha retângulos arredondados auxiliares no Canvas
+function drawCanvasRoundedRect(ctx, x, y, width, height, radius, fillStyle, strokeStyle, strokeWidth) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fillStyle) {
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+    }
+    if (strokeStyle) {
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = strokeWidth || 1;
+        ctx.stroke();
+    }
+}
+
+// Desenha um pentágono para o padrão da bola de futebol
+function drawCanvasPentagon(ctx, x, y, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+        const angle = -Math.PI/2 + (i * 2 * Math.PI) / 5;
+        ctx.lineTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#111612';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#1e2920';
+    ctx.stroke();
+}
+
+// Desenha a bola de futebol no rodapé
+function drawCanvasSoccerBall(ctx, cx, cy, r) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2*Math.PI);
+    ctx.fillStyle = '#cbd5e0';
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#1a201c';
+    ctx.stroke();
+    ctx.clip();
+
+    // Desenha o pentágono central
+    drawCanvasPentagon(ctx, cx, cy, r * 0.35);
+
+    // Linhas estendidas
+    const angleStep = (2 * Math.PI) / 5;
+    const offsetAngle = -Math.PI / 2;
+    for (let i = 0; i < 5; i++) {
+        const angle = offsetAngle + i * angleStep;
+        const px = cx + Math.cos(angle) * r * 0.35;
+        const py = cy + Math.sin(angle) * r * 0.35;
+        const ex = cx + Math.cos(angle) * r;
+        const ey = cy + Math.sin(angle) * r;
+        
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        // Desenha pedaços de pentágonos nas bordas
+        ctx.beginPath();
+        ctx.arc(ex, ey, r * 0.25, 0, 2*Math.PI);
+        ctx.fillStyle = '#111612';
+        ctx.fill();
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+// Função principal de desenho do Card no Canvas
+async function generateMatchCardUrl(config) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Fundo do Estádio (Gradiente rico e dramático)
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, 600);
+    bgGradient.addColorStop(0, '#040905'); // Escuro no topo
+    bgGradient.addColorStop(0.6, '#091c10'); // Verde escuro
+    bgGradient.addColorStop(1, '#0e2916'); // Grama no rodapé
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, 600, 600);
+
+    // 2. Refletores e Luzes de Estádio (Glow)
+    // Refletor Esquerdo
+    const radialL = ctx.createRadialGradient(60, 60, 0, 60, 60, 150);
+    radialL.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    radialL.addColorStop(0.3, 'rgba(212, 175, 55, 0.15)'); // Glow dourado
+    radialL.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = radialL;
+    ctx.fillRect(0, 0, 600, 600);
+
+    // Refletor Direito
+    const radialR = ctx.createRadialGradient(540, 60, 0, 540, 60, 150);
+    radialR.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    radialR.addColorStop(0.3, 'rgba(212, 175, 55, 0.15)');
+    radialR.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = radialR;
+    ctx.fillRect(0, 0, 600, 600);
+
+    // Feixes de luz dos refletores
+    ctx.beginPath();
+    ctx.moveTo(60, 60);
+    ctx.lineTo(-50, 600);
+    ctx.lineTo(250, 600);
+    ctx.closePath();
+    const beamL = ctx.createLinearGradient(60, 60, 100, 600);
+    beamL.addColorStop(0, 'rgba(255,255,255,0.08)');
+    beamL.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = beamL;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(540, 60);
+    ctx.lineTo(350, 600);
+    ctx.lineTo(650, 600);
+    ctx.closePath();
+    const beamR = ctx.createLinearGradient(540, 60, 500, 600);
+    beamR.addColorStop(0, 'rgba(255,255,255,0.08)');
+    beamR.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = beamR;
+    ctx.fill();
+
+    // 3. Bola de futebol no rodapé
+    drawCanvasSoccerBall(ctx, 300, 595, 80);
+
+    // 4. Arco da grande área (Linha de campo)
+    ctx.beginPath();
+    ctx.arc(300, 595, 140, Math.PI, 2*Math.PI);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // 5. Carregar e Desenhar Brasão Dona Catarina (Esquerda)
+    const logoDonaCatarina = await loadCardImage('img/brasao.jpg?v=2');
+    const xDonaCatarina = 150;
+    const yLogos = 230;
+    const rLogos = 65;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
+    ctx.clip();
+    if (logoDonaCatarina) {
+        ctx.drawImage(logoDonaCatarina, xDonaCatarina - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
+    } else {
+        // Fallback se não carregar
+        ctx.fillStyle = '#093b1f';
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('DC', xDonaCatarina, yLogos);
+    }
+    ctx.restore();
+
+    // Moldura do brasão do Dona Catarina
+    ctx.beginPath();
+    ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // 6. Carregar e Desenhar Brasão do Adversário (Direita)
+    const opponentLogoUrl = getOpponentLogoUrlForCard(config.opponent);
+    const logoOpponent = opponentLogoUrl ? await loadCardImage(opponentLogoUrl) : null;
+    const xOpponent = 450;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
+    ctx.clip();
+    if (logoOpponent) {
+        ctx.drawImage(logoOpponent, xOpponent - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
+    } else {
+        // Crachá gerado em tempo real com as iniciais se o time for novo ou sem brasão
+        ctx.fillStyle = '#2d3748';
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 32px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const initials = config.opponent.substring(0, 2).toUpperCase();
+        ctx.fillText(initials, xOpponent, yLogos);
+    }
+    ctx.restore();
+
+    // Moldura do brasão do adversário
+    ctx.beginPath();
+    ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
+    ctx.strokeStyle = '#cbd5e0';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // 7. Letra "X" no centro
+    ctx.font = 'italic bold 56px Impact, Arial Black, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = 10;
+    ctx.fillText('X', 300, yLogos);
+    ctx.shadowBlur = 0; // Desativar sombra para o resto
+
+    // 8. Título do Jogo no Topo (AMISTOSO / CAMPEONATO)
+    ctx.font = 'italic bold 76px Impact, Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    
+    // Borda do texto principal
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 8;
+    ctx.strokeText(config.type, 300, 45);
+    
+    // Preenchimento do texto principal
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(config.type, 300, 45);
+
+    // 9. Faixa de DATA (Preta)
+    const dateText = config.date.toUpperCase();
+    drawCanvasRoundedRect(ctx, 110, 325, 380, 44, 8, '#080c09');
+    
+    // Detalhe verde na esquerda da faixa
+    drawCanvasRoundedRect(ctx, 110, 325, 8, 44, 0, '#27ae60');
+    
+    ctx.font = 'bold 20px Montserrat, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`📅  ${dateText}`, 300, 347);
+
+    // 10. Faixa de LOCAL E HORA (Branca)
+    const localText = `${config.location.toUpperCase()}  -  ${config.time.toUpperCase()}`;
+    drawCanvasRoundedRect(ctx, 60, 395, 480, 46, 8, '#ffffff');
+    
+    ctx.font = 'bold 20px Montserrat, Arial, sans-serif';
+    ctx.fillStyle = '#0d1310';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`📍  ${localText}`, 300, 418);
+
+    // 11. Faixa de CHAMADA / INFORMAÇÃO (Verde)
+    const footerText = config.footer.toUpperCase();
+    drawCanvasRoundedRect(ctx, 80, 465, 440, 40, 8, '#137547');
+    
+    ctx.font = 'bold 16px Montserrat, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(footerText, 300, 485);
+
+    // Retorna a imagem codificada em Base64
+    return canvas.toDataURL('image/png');
+}
+
+// Gerencia a abertura e dados do gerador de card
+let currentCardMatchId = null;
+
+function openCardGenerator(match) {
+    currentCardMatchId = match.id;
+    
+    // Preenche os campos do formulário com os dados da partida
+    document.getElementById('card-opponent-input').value = match.opponent;
+    document.getElementById('card-date-input').value = getDayOfWeekAndDateString(match.date);
+    document.getElementById('card-time-input').value = `AS ${match.time.toUpperCase().replace('ÀS ', '').replace('AS ', '')}`;
+    document.getElementById('card-location-input').value = match.location.replace(/ \((Nosso Campo|Fora)\)/g, '').toUpperCase();
+    document.getElementById('card-footer-input').value = "CONTAMOS COM A PRESENÇA DE TODOS";
+    
+    // Tenta adivinhar se é amistoso ou campeonato com base no adversário ou histórico
+    const typeSelect = document.getElementById('card-type-input');
+    typeSelect.value = "AMISTOSO"; // Default
+    
+    // Exibe o modal
+    const modal = document.getElementById('card-generator-modal');
+    if (modal) {
+        modal.classList.add('active');
+        // Renderiza o card pela primeira vez
+        generateAndPreviewCard();
+    }
+}
+
+// Renderiza o card em tempo real e insere na tag img do preview
+async function generateAndPreviewCard() {
+    const previewImg = document.getElementById('card-preview-image');
+    if (!previewImg) return;
+
+    previewImg.src = ''; // Limpa enquanto gera
+    
+    const config = {
+        type: document.getElementById('card-type-input').value,
+        opponent: document.getElementById('card-opponent-input').value,
+        date: document.getElementById('card-date-input').value,
+        time: document.getElementById('card-time-input').value,
+        location: document.getElementById('card-location-input').value,
+        footer: document.getElementById('card-footer-input').value
+    };
+
+    try {
+        const dataUrl = await generateMatchCardUrl(config);
+        previewImg.src = dataUrl;
+    } catch (err) {
+        console.error('Erro ao gerar card:', err);
+        showToast('Erro ao desenhar imagem do card', true);
+    }
+}
+
+// Inicializa os escutadores de eventos do gerador de cards
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('card-generator-modal');
+    const closeBtn = document.getElementById('card-modal-close');
+    const form = document.getElementById('card-generator-form');
+    const downloadBtn = document.getElementById('btn-download-card');
+
+    if (closeBtn && modal) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+        
+        // Fechar ao clicar fora do modal
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            generateAndPreviewCard();
+        });
+    }
+
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const previewImg = document.getElementById('card-preview-image');
+            if (previewImg && previewImg.src) {
+                const link = document.createElement('a');
+                const opponentName = document.getElementById('card-opponent-input').value.replace(/\s+/g, '_');
+                link.download = `confronto_dona_catarina_x_${opponentName}.png`;
+                link.href = previewImg.src;
+                link.click();
+                showToast('Card baixado com sucesso!');
+            } else {
+                showToast('Aguarde a imagem terminar de gerar.', true);
+            }
+        });
+    }
+});

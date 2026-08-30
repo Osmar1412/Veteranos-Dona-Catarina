@@ -9,7 +9,7 @@
     <meta name="author" content="E.C. Vet. Dona Catarina">
     
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="styles.css?v=10">
+    <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
 
@@ -521,6 +521,68 @@
         </div>
     </footer>
 
+    <!-- Modal do Gerador de Card para WhatsApp -->
+    <div class="card-generator-modal" id="card-generator-modal">
+        <div class="card-modal-content">
+            <button class="card-modal-close" id="card-modal-close">&times;</button>
+            <h3>🖼️ Gerador de Card para WhatsApp</h3>
+            <p class="card-modal-subtitle">Personalize os dados abaixo para gerar a arte do confronto.</p>
+            
+            <div class="card-modal-body">
+                <div class="card-preview-container">
+                    <div class="card-preview-box">
+                        <img id="card-preview-image" src="" alt="Pré-visualização do Card">
+                    </div>
+                    <p class="card-instructions">💡 <strong>Dica:</strong> No celular, toque e segure na imagem acima para copiar ou compartilhar direto no WhatsApp!</p>
+                </div>
+                
+                <form class="card-generator-form" id="card-generator-form">
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="card-type-input">Tipo de Jogo</label>
+                            <select id="card-type-input">
+                                <option value="AMISTOSO">Amistoso</option>
+                                <option value="CAMPEONATO">Campeonato</option>
+                                <option value="TREINO">Treino</option>
+                                <option value="FESTIVAL">Festival</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-opponent-input">Adversário</label>
+                            <input type="text" id="card-opponent-input" placeholder="Ex: São João F.C." required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="card-date-input">Data (Texto)</label>
+                            <input type="text" id="card-date-input" placeholder="Ex: DOMINGO 30/08" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-time-input">Horário</label>
+                            <input type="text" id="card-time-input" placeholder="Ex: AS 09:30" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="card-location-input">Local</label>
+                        <input type="text" id="card-location-input" placeholder="Ex: CAMPO DA CERIM" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="card-footer-input">Mensagem do Rodapé</label>
+                        <input type="text" id="card-footer-input" value="CONTAMOS COM A PRESENÇA DE TODOS" placeholder="Frase de efeito" required>
+                    </div>
+                    
+                    <div class="card-modal-actions">
+                        <button type="submit" class="btn btn-gold" id="btn-update-card">🔄 Atualizar Card</button>
+                        <button type="button" class="btn btn-green" id="btn-download-card">📥 Baixar Imagem</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Contêiner de Toasts (Notificações do sistema) -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -529,6 +591,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <!-- Script Principal -->
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
 </body>
 </html>
