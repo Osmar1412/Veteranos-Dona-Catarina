@@ -1697,13 +1697,13 @@ async function generateMatchCardUrl(config) {
 
     // 12. Faixa de CHAMADA / INFORMAÇÃO (Pílula Verde do Clube)
     const footerText = config.footer.toUpperCase();
-    drawPremiumRoundedRect(ctx, 80, 470, 440, 40, 8, '#137547', null, 'rgba(0,0,0,0.4)', 8, 3);
+    drawPremiumRoundedRect(ctx, 70, 470, 460, 44, 8, '#f1c40f', null, 'rgba(0,0,0,0.4)', 10, 3);
     
-    ctx.font = 'bold 15px Montserrat, Arial, sans-serif';
-    ctx.fillStyle = '#ffffff';
+    ctx.font = 'italic bold 18px Montserrat, Arial, sans-serif';
+    ctx.fillStyle = '#06120b'; // Escuro para contraste máximo no dourado
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(footerText, 300, 490);
+    ctx.fillText(footerText, 300, 492);
 
     return canvas.toDataURL('image/png');
 }
