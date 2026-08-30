@@ -1706,6 +1706,22 @@ function makeBackgroundTransparent(img) {
     return canvas;
 }
 
+// Função auxiliar para desenhar o escudo do E.C. Vet. Dona Catarina
+function drawDonaCatarinaShieldPath(ctx, x, y, w, h) {
+    const left = x - w/2;
+    const right = x + w/2;
+    const top = y - h/2;
+    const bottom = y + h/2;
+    
+    ctx.beginPath();
+    ctx.moveTo(x, top + 15);
+    ctx.quadraticCurveTo(x - w*0.25, top + 5, left, top + 15);
+    ctx.bezierCurveTo(left - 5, y + 10, left + 15, bottom - 30, x, bottom);
+    ctx.bezierCurveTo(right - 15, bottom - 30, right + 5, y + 10, right, top + 15);
+    ctx.quadraticCurveTo(x + w*0.25, top + 5, x, top + 15);
+    ctx.closePath();
+}
+
 // Função auxiliar para desenhar o escudo do Santos FC para Vila São José
 function drawSantosShieldPath(ctx, x, y, w, h) {
     const left = x - w/2;
