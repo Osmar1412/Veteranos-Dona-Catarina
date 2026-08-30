@@ -1504,17 +1504,219 @@ function drawHazySpotlight(ctx, cx, cy, dirX) {
     ctx.restore();
 }
 
-// Função principal de desenho do Card no Canvas (Fusão: Estádio Realista e Elementos Futuristas)
+// Desenha o ícone do calendário programaticamente
+function drawCalendarIcon(ctx, x, y, w, h) {
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    // Caixa principal
+    ctx.strokeRect(x, y + 4, w, h - 4);
+    // Linha do cabeçalho
+    ctx.beginPath();
+    ctx.moveTo(x, y + 10);
+    ctx.lineTo(x + w, y + 10);
+    ctx.stroke();
+    // Anéis de metal do espiral
+    ctx.beginPath();
+    ctx.moveTo(x + 5, y); ctx.lineTo(x + 5, y + 6);
+    ctx.moveTo(x + w - 5, y); ctx.lineTo(x + w - 5, y + 6);
+    ctx.stroke();
+    // Dias representados por pequenos quadrados
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 5, y + 14, 3, 3);
+    ctx.fillRect(x + 11, y + 14, 3, 3);
+    ctx.fillRect(x + 17, y + 14, 3, 3);
+    ctx.fillRect(x + 5, y + 20, 3, 3);
+    ctx.fillRect(x + 11, y + 20, 3, 3);
+    ctx.fillRect(x + 17, y + 20, 3, 3);
+}
+
+// Desenha o ícone de campo de futebol programaticamente
+function drawPitchIcon(ctx, x, y, w, h) {
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    // Limite externo do campo
+    ctx.strokeRect(x, y, w, h);
+    // Linha do meio de campo
+    ctx.beginPath();
+    ctx.moveTo(x + w/2, y);
+    ctx.lineTo(x + w/2, y + h);
+    ctx.stroke();
+    // Círculo central
+    ctx.beginPath();
+    ctx.arc(x + w/2, y + h/2, 5, 0, 2*Math.PI);
+    ctx.stroke();
+    // Grandes áreas
+    ctx.strokeRect(x, y + h/4, 6, h/2);
+    ctx.strokeRect(x + w - 6, y + h/4, 6, h/2);
+}
+
+// Desenha o "X" estilizado com efeito de pinceladas/brush-stroke
+function drawBrushX(ctx, cx, cy, size) {
+    ctx.save();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
+    
+    // Traço principal 1
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.moveTo(cx - size/2, cy - size/2);
+    ctx.lineTo(cx + size/2, cy + size/2);
+    ctx.stroke();
+
+    // Traço principal 2
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.moveTo(cx + size/2, cy - size/2);
+    ctx.lineTo(cx - size/2, cy + size/2);
+    ctx.stroke();
+    
+    // Pequenos traços finos para efeito de textura
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+        const offset = (Math.random() - 0.5) * 16;
+        ctx.beginPath();
+        ctx.moveTo(cx - size/2 + offset, cy - size/2 + (Math.random() - 0.5) * 8);
+        ctx.lineTo(cx + size/2 + offset, cy + size/2 + (Math.random() - 0.5) * 8);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + size/2 + offset, cy - size/2 + (Math.random() - 0.5) * 8);
+        ctx.lineTo(cx - size/2 + offset, cy + size/2 + (Math.random() - 0.5) * 8);
+        ctx.stroke();
+    }
+    
+    ctx.restore();
+}
+
+// Desenha um fundo texturizado verde imitando uma pincelada
+function drawGreenBrushBackground(ctx, x, y, width, height) {
+    ctx.save();
+    const grad = ctx.createLinearGradient(x, 0, x + width, 0);
+    grad.addColorStop(0, 'rgba(19, 117, 71, 0)');
+    grad.addColorStop(0.15, 'rgba(19, 117, 71, 0.9)');
+    grad.addColorStop(0.5, 'rgba(12, 90, 52, 0.95)');
+    grad.addColorStop(0.85, 'rgba(19, 117, 71, 0.9)');
+    grad.addColorStop(1, 'rgba(19, 117, 71, 0)');
+    ctx.fillStyle = grad;
+    
+    ctx.beginPath();
+    ctx.moveTo(x, y + height/2);
+    for (let currX = x; currX <= x + width; currX += 20) {
+        const waveY = y + (Math.sin(currX * 0.1) * 3) + (Math.random() - 0.5) * 2;
+        ctx.lineTo(currX, waveY);
+    }
+    ctx.lineTo(x + width, y + height);
+    for (let currX = x + width; currX >= x; currX -= 20) {
+        const waveY = y + height + (Math.sin(currX * 0.1) * 3) + (Math.random() - 0.5) * 2;
+        ctx.lineTo(currX, waveY);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
+// Utilitário para desenhar texto multi-colorido (destaca a data com cor verde no meio do texto)
+function drawColoredText(ctx, text, x, y, font, defaultColor, highlightColor) {
+    ctx.save();
+    ctx.font = font;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    
+    const words = text.split(' ');
+    let currentX = x;
+    
+    words.forEach((word) => {
+        const hasSlash = word.includes('/');
+        ctx.fillStyle = hasSlash ? highlightColor : defaultColor;
+        ctx.fillText(word, currentX, y);
+        currentX += ctx.measureText(word + ' ').width;
+    });
+    ctx.restore();
+}
+
+// Algoritmo de Flood Fill para remover fundo branco de logotipos JPG tornando-os transparentes
+function makeBackgroundTransparent(img) {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    const w = canvas.width;
+    const h = canvas.height;
+    
+    const visited = new Uint8Array(w * h);
+    const queue = [];
+    
+    function enqueue(x, y) {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        const idx = y * w + x;
+        if (visited[idx]) return;
+        
+        const pixelIdx = idx * 4;
+        const r = data[pixelIdx];
+        const g = data[pixelIdx + 1];
+        const b = data[pixelIdx + 2];
+        const a = data[pixelIdx + 3];
+        
+        // Remove pixels próximos ao branco
+        if (r > 240 && g > 240 && b > 240 && a > 0) {
+            visited[idx] = 1;
+            queue.push(idx);
+        }
+    }
+    
+    // Inicia a busca pelos cantos
+    enqueue(0, 0);
+    enqueue(w - 1, 0);
+    enqueue(0, h - 1);
+    enqueue(w - 1, h - 1);
+    
+    // Inicia a busca pelas bordas gerais
+    for (let x = 0; x < w; x += 10) {
+        enqueue(x, 0);
+        enqueue(x, h - 1);
+    }
+    for (let y = 0; y < h; y += 10) {
+        enqueue(0, y);
+        enqueue(w - 1, y);
+    }
+    
+    let head = 0;
+    while (head < queue.length) {
+        const idx = queue[head++];
+        const x = idx % w;
+        const y = Math.floor(idx / w);
+        
+        data[idx * 4 + 3] = 0; // Torna transparente
+        
+        enqueue(x + 1, y);
+        enqueue(x - 1, y);
+        enqueue(x, y + 1);
+        enqueue(x, y - 1);
+    }
+    
+    ctx.putImageData(imgData, 0, 0);
+    return canvas;
+}
+
+// Função principal de desenho do Card no Canvas (Estilo Oficial e Idêntico à Referência do Usuário)
 async function generateMatchCardUrl(config) {
     const canvas = document.createElement('canvas');
     canvas.width = 600;
     canvas.height = 600;
     const ctx = canvas.getContext('2d');
 
-    // 1. Atmosfera do Estádio (Céu escuro degradê)
+    // 1. Fundo do Estádio (Céu escuro degradê com neblina)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, 600);
-    skyGrad.addColorStop(0, '#010503'); // Preto absoluto no topo
-    skyGrad.addColorStop(0.5, '#05140b'); // Verde profundo escuro
+    skyGrad.addColorStop(0, '#010503'); // Topo preto
+    skyGrad.addColorStop(0.5, '#041007'); // Verde escuro
     skyGrad.addColorStop(0.8, '#0a2313');
     skyGrad.addColorStop(1, '#0b2615');
     ctx.fillStyle = skyGrad;
@@ -1524,18 +1726,18 @@ async function generateMatchCardUrl(config) {
     const pitchY = 420;
     const pitchHeight = 180;
     const grassGrad = ctx.createLinearGradient(0, pitchY, 0, 600);
-    grassGrad.addColorStop(0, '#093118'); // Verde grama médio
-    grassGrad.addColorStop(1, '#03140a'); // Verde grama escuro na base
+    grassGrad.addColorStop(0, '#093118');
+    grassGrad.addColorStop(1, '#03140a');
     ctx.fillStyle = grassGrad;
     ctx.fillRect(0, pitchY, 600, pitchHeight);
 
-    // Desenha listras em perspectiva no gramado
+    // Listras em perspectiva do gramado
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, pitchY, 600, pitchHeight);
     ctx.clip();
     
-    const vpX = 300; // Ponto de fuga centralizado
+    const vpX = 300;
     const vpY = 380;
     
     ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
@@ -1549,16 +1751,16 @@ async function generateMatchCardUrl(config) {
     }
     ctx.restore();
 
-    // 3. Névoa e Fumaça para suavizar divisões e dar realismo
+    // 3. Névoa e Fumaça de Estádio
     drawSmokePuff(ctx, 100, 480, 150);
     drawSmokePuff(ctx, 500, 480, 150);
     drawSmokePuff(ctx, 300, 520, 170);
 
-    // 4. Refletores acesos (Luz volumétrica esfumada)
+    // 4. Refletores acesos (Luz volumétrica volumosa e natural)
     drawHazySpotlight(ctx, 60, 50, 120);
     drawHazySpotlight(ctx, 540, 50, -120);
 
-    // 5. Linha branca da grande área e Bola 3D no rodapé
+    // 5. Linha branca da grande área e Bola de Futebol no rodapé
     ctx.beginPath();
     ctx.arc(300, 590, 135, Math.PI, 2*Math.PI);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
@@ -1567,143 +1769,127 @@ async function generateMatchCardUrl(config) {
 
     drawCanvasSoccerBall(ctx, 300, 590, 75);
 
-    // 6. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Badge 3D Flutuante)
-    const logoDonaCatarina = await loadCardImage('img/brasao.jpg?v=2');
-    const xDonaCatarina = 150;
+    // 6. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Formato Shield Natural com Sombra 3D)
+    const logoDonaCatarinaRaw = await loadCardImage('img/brasao.jpg?v=2');
+    const logoDonaCatarina = logoDonaCatarinaRaw ? makeBackgroundTransparent(logoDonaCatarinaRaw) : null;
+    const xDonaCatarina = 140;
     const yLogos = 240;
-    const rLogos = 65;
+    const logoWidth = 150;
+    const logoHeight = 150;
 
-    ctx.save();
-    // Efeito de sombra projetada física (Drop Shadow)
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 6;
-
-    // Fundo do círculo
-    ctx.beginPath();
-    ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
-    ctx.fillStyle = '#093b1f';
-    ctx.fill();
-
-    // Corta e desenha a imagem do brasão
-    ctx.save();
-    ctx.clip();
     if (logoDonaCatarina) {
-        ctx.drawImage(logoDonaCatarina, xDonaCatarina - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 8;
+        ctx.drawImage(logoDonaCatarina, xDonaCatarina - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
+        ctx.restore();
     }
-    ctx.restore();
 
-    // Borda de Ouro sólida e premium
-    ctx.beginPath();
-    ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
-    ctx.strokeStyle = '#d4af37';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    ctx.restore();
-
-    // 7. Carregar e Desenhar Brasão do Adversário (Direita - Badge 3D Flutuante)
+    // 7. Carregar e Desenhar Brasão do Adversário (Direita - Formato Natural com Sombra 3D)
     const opponentLogoUrl = getOpponentLogoUrlForCard(config.opponent);
-    const logoOpponent = opponentLogoUrl ? await loadCardImage(opponentLogoUrl) : null;
-    const xOpponent = 450;
+    const logoOpponentRaw = opponentLogoUrl ? await loadCardImage(opponentLogoUrl) : null;
+    const logoOpponent = logoOpponentRaw ? makeBackgroundTransparent(logoOpponentRaw) : null;
+    const xOpponent = 460;
 
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 6;
-
-    ctx.beginPath();
-    ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
-    ctx.fillStyle = '#1e293b';
-    ctx.fill();
-
-    ctx.save();
-    ctx.clip();
     if (logoOpponent) {
-        ctx.drawImage(logoOpponent, xOpponent - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 8;
+        ctx.drawImage(logoOpponent, xOpponent - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
+        ctx.restore();
     } else {
+        // Fallback redondo se não encontrar logo
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 8;
+        ctx.beginPath();
+        ctx.arc(xOpponent, yLogos, 65, 0, 2*Math.PI);
         ctx.fillStyle = '#1e293b';
         ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 32px Montserrat, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const initials = config.opponent.substring(0, 2).toUpperCase();
         ctx.fillText(initials, xOpponent, yLogos);
+        ctx.restore();
     }
-    ctx.restore();
 
-    // Borda de Prata sólida
-    ctx.beginPath();
-    ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    ctx.restore();
+    // 8. Desenha o "X" com efeito de pinceladas no centro (Brush X)
+    drawBrushX(ctx, 300, yLogos, 70);
 
-    // 8. Separador "VS" com sombra realista (Sem adornos virtuais)
+    // 9. Título da Partida ("AMISTOSO" em destaque com traço horizontal verde)
     ctx.save();
-    ctx.font = 'italic bold 52px Impact, sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
-    ctx.fillText('VS', 300, yLogos);
-    ctx.restore();
-
-    // 9. Título da Partida (AMISTOSO / CAMPEONATO) em Branco Premium
-    ctx.save();
-    ctx.font = 'italic bold 68px Impact, Arial Black, sans-serif';
+    ctx.font = 'italic bold 76px Impact, Arial Black, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     
-    // Sombra de contraste
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     ctx.shadowBlur = 12;
     ctx.shadowOffsetY = 4;
     
-    // Contorno do texto
-    ctx.strokeStyle = '#020503';
-    ctx.lineWidth = 6;
-    ctx.strokeText(config.type, 300, 32);
+    ctx.strokeStyle = '#111613';
+    ctx.lineWidth = 8;
+    ctx.strokeText(config.type.toUpperCase(), 300, 35);
     
-    // Texto
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(config.type, 300, 32);
+    ctx.fillText(config.type.toUpperCase(), 300, 35);
     ctx.restore();
 
-    // 10. Faixa de DATA (Pílula de Vidro Escuro e Dourado)
+    // Linha verde texturizada abaixo do título
+    ctx.fillStyle = '#1b7843';
+    ctx.fillRect(100, 122, 400, 4);
+
+    // 10. Faixa de DATA (Pílula com Borda Verde e Ícone do Calendário)
     const dateText = config.date.toUpperCase();
-    drawPremiumRoundedRect(ctx, 110, 340, 380, 44, 8, 'rgba(10, 18, 14, 0.9)', 'rgba(255, 255, 255, 0.1)', 'rgba(0,0,0,0.4)', 8, 3);
+    drawPremiumRoundedRect(ctx, 40, 340, 520, 48, 8, '#070e0a', '#214c25', 'rgba(0,0,0,0.5)', 8, 3);
     
-    ctx.font = 'bold 20px Montserrat, Arial, sans-serif';
+    // Ícone Calendário
+    drawPremiumRoundedRect(ctx, 52, 346, 36, 36, 4, 'rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.15)');
+    drawCalendarIcon(ctx, 60, 350, 20, 20);
+    
+    // Texto com a data destacada em verde
+    drawColoredText(ctx, dateText, 105, 364, 'bold 22px Montserrat, Arial, sans-serif', '#ffffff', '#6cc04a');
+
+    // 11. Faixa de LOCAL E HORA (Pílula com Borda Verde e Ícone do Campo)
+    const localText = config.location.toUpperCase();
+    drawPremiumRoundedRect(ctx, 40, 405, 520, 48, 8, '#070e0a', '#214c25', 'rgba(0,0,0,0.5)', 8, 3);
+    
+    // Ícone Campo de Futebol
+    drawPremiumRoundedRect(ctx, 52, 411, 36, 36, 4, 'rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.15)');
+    drawPitchIcon(ctx, 60, 422, 20, 14);
+    
+    // Texto do Local
+    drawColoredText(ctx, localText, 105, 429, 'bold 22px Montserrat, Arial, sans-serif', '#ffffff', '#6cc04a');
+
+    // 12. Faixa de CHAMADA / INFORMAÇÃO ("CONTAMOS COM A PRESENÇA DE TODOS" em duas linhas sobre pincelada verde)
+    drawGreenBrushBackground(ctx, 60, 465, 480, 62);
+    
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = 4;
+
+    // Linha 1: CONTAMOS COM A
+    ctx.font = 'bold 17px Montserrat, Arial, sans-serif';
     ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`📅  ${dateText}`, 300, 362);
-
-    // 11. Faixa de LOCAL E HORA (Pílula Branca Contrastante)
-    const localText = `${config.location.toUpperCase()}  -  ${config.time.toUpperCase()}`;
-    drawPremiumRoundedRect(ctx, 50, 405, 500, 46, 8, '#ffffff', null, 'rgba(0,0,0,0.4)', 10, 3);
+    ctx.fillText("CONTAMOS COM A", 300, 482);
     
-    ctx.font = 'bold 20px Montserrat, Arial, sans-serif';
-    ctx.fillStyle = '#0a170f'; // Escuro para contraste na faixa branca
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`📍  ${localText}`, 300, 428);
-
-    // 12. Faixa de CHAMADA / INFORMAÇÃO (Pílula Verde do Clube)
-    const footerText = config.footer.toUpperCase();
-    drawPremiumRoundedRect(ctx, 70, 470, 460, 44, 8, '#f1c40f', null, 'rgba(0,0,0,0.4)', 10, 3);
-    
-    ctx.font = 'italic bold 18px Montserrat, Arial, sans-serif';
-    ctx.fillStyle = '#06120b'; // Escuro para contraste máximo no dourado
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(footerText, 300, 492);
+    // Linha 2: PRESENÇA DE TODOS
+    ctx.font = 'italic bold 26px Impact, Montserrat, sans-serif';
+    ctx.fillStyle = '#6cc04a';
+    ctx.fillText("PRESENÇA DE TODOS", 300, 508);
+    ctx.restore();
 
     return canvas.toDataURL('image/png');
 }
@@ -1716,8 +1902,8 @@ function openCardGenerator(match) {
     
     // Preenche os campos do formulário com os dados da partida
     document.getElementById('card-opponent-input').value = match.opponent;
-    document.getElementById('card-date-input').value = getDayOfWeekAndDateString(match.date);
-    document.getElementById('card-time-input').value = `AS ${match.time.toUpperCase().replace('ÀS ', '').replace('AS ', '')}`;
+    document.getElementById('card-date-input').value = getDayOfWeekAndDateString(match.date).toUpperCase();
+    document.getElementById('card-time-input').value = match.time.toUpperCase().replace('ÀS ', '').replace('AS ', '');
     document.getElementById('card-location-input').value = match.location.replace(/ \((Nosso Campo|Fora)\)/g, '').toUpperCase();
     document.getElementById('card-footer-input').value = "CONTAMOS COM A PRESENÇA DE TODOS";
     
@@ -1741,11 +1927,14 @@ async function generateAndPreviewCard() {
 
     previewImg.src = ''; // Limpa enquanto gera
     
+    const dateVal = document.getElementById('card-date-input').value.toUpperCase();
+    const timeVal = document.getElementById('card-time-input').value.toUpperCase();
+    const combinedDate = `${dateVal} ÀS ${timeVal}`;
+    
     const config = {
         type: document.getElementById('card-type-input').value,
         opponent: document.getElementById('card-opponent-input').value,
-        date: document.getElementById('card-date-input').value,
-        time: document.getElementById('card-time-input').value,
+        date: combinedDate,
         location: document.getElementById('card-location-input').value,
         footer: document.getElementById('card-footer-input').value
     };
