@@ -1706,6 +1706,118 @@ function makeBackgroundTransparent(img) {
     return canvas;
 }
 
+// Função auxiliar para desenhar o escudo do Santos FC para Vila São José
+function drawSantosShieldPath(ctx, x, y, w, h) {
+    const left = x - w/2;
+    const right = x + w/2;
+    const top = y - h/2;
+    const bottom = y + h/2;
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(right, top);
+    ctx.quadraticCurveTo(right + 2, y, right - 8, bottom - 18);
+    ctx.lineTo(x, bottom);
+    ctx.lineTo(left + 8, bottom - 18);
+    ctx.quadraticCurveTo(left - 2, y, left, top);
+    ctx.closePath();
+}
+
+// Recorta o logotipo do oponente com base no seu formato conhecido para evitar caixa quadrada branca
+function clipOpponentLogo(ctx, opponentName, x, y, w, h) {
+    const name = opponentName.toUpperCase();
+    if (name.includes('GRÁFICA') || name.includes('GRAFICA') || name.includes('FM')) {
+        ctx.beginPath();
+        ctx.arc(x, y, 62, 0, 2*Math.PI);
+        ctx.clip();
+    } else if (name.includes('SÃO JOSÉ') || name.includes('SAO JOSE') || name.includes('SAO JOSÉ') || name.includes('SAO JOSÉ') || name.includes('VSJFC')) {
+        drawSantosShieldPath(ctx, x, y, 125, 125);
+        ctx.clip();
+    } else if (name.includes('SÃO JOÃO') || name.includes('SAO JOAO')) {
+        drawDonaCatarinaShieldPath(ctx, x, y, 120, 120);
+        ctx.clip();
+    } else if (name.includes('GRANJA') || name.includes('SELECTA') || name.includes('INIMIGOS')) {
+        // Sem recorte (Granja é PNG transparente, Inimigos tem coroa de louros externa)
+    } else {
+        // Fallback padrão circular
+        ctx.beginPath();
+        ctx.arc(x, y, 62, 0, 2*Math.PI);
+        ctx.clip();
+    }
+}
+
+// Desenha a moldura 3D correspondente ao corte do oponente
+function drawOpponentBorder(ctx, opponentName, x, y, w, h) {
+    const name = opponentName.toUpperCase();
+    ctx.save();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    
+    if (name.includes('GRÁFICA') || name.includes('GRAFICA') || name.includes('FM')) {
+        ctx.beginPath();
+        ctx.arc(x, y, 62, 0, 2*Math.PI);
+        ctx.stroke();
+    } else if (name.includes('SÃO JOSÉ') || name.includes('SAO JOSE') || name.includes('SAO JOSÉ') || name.includes('SAO JOSÉ') || name.includes('VSJFC')) {
+        drawSantosShieldPath(ctx, x, y, 125, 125);
+        ctx.stroke();
+    } else if (name.includes('SÃO JOÃO') || name.includes('SAO JOAO')) {
+        drawDonaCatarinaShieldPath(ctx, x, y, 120, 120);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+// Desenha texto com efeito grunge/desgastado de estêncil
+function drawGrungeText(ctx, text, x, y, font, fillColor, strokeColor, strokeWidth) {
+    ctx.save();
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    
+    // Contorno escuro
+    if (strokeColor && strokeWidth) {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = strokeWidth;
+        ctx.strokeText(text, x, y);
+    }
+    
+    // Preenchimento branco
+    ctx.fillStyle = fillColor;
+    ctx.fillText(text, x, y);
+    
+    // Efeito Grunge: Aplica cortes da cor de fundo (preto) dentro das letras
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = '#010503'; // Cor escura do topo do céu
+    
+    // Arranhões diagonais finos
+    for (let i = 0; i < 25; i++) {
+        const gx = x + (Math.random() - 0.5) * 380;
+        const gy = y + Math.random() * 80;
+        const w = 1.5 + Math.random() * 2;
+        const h = 4 + Math.random() * 10;
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(0.2 + Math.random() * 0.2);
+        ctx.fillRect(-w/2, -h/2, w, h);
+        ctx.restore();
+    }
+    
+    // Pontos de desgaste
+    for (let i = 0; i < 45; i++) {
+        const gx = x + (Math.random() - 0.5) * 380;
+        const gy = y + Math.random() * 80;
+        const r = 0.5 + Math.random() * 1.5;
+        ctx.beginPath();
+        ctx.arc(gx, gy, r, 0, 2*Math.PI);
+        ctx.fill();
+    }
+    
+    ctx.restore();
+    ctx.globalCompositeOperation = 'source-over'; // Reseta operação de composição
+}
+
 // Função principal de desenho do Card no Canvas (Estilo Oficial e Idêntico à Referência do Usuário)
 async function generateMatchCardUrl(config) {
     const canvas = document.createElement('canvas');
@@ -1760,7 +1872,7 @@ async function generateMatchCardUrl(config) {
     drawHazySpotlight(ctx, 60, 50, 120);
     drawHazySpotlight(ctx, 540, 50, -120);
 
-    // 5. Linha branca da grande área e Bola de Futebol no rodapé
+    // 5. Linha branca da grande área e Bola de Futebol no rodapé (com sombra/sujeira na bola)
     ctx.beginPath();
     ctx.arc(300, 590, 135, Math.PI, 2*Math.PI);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
@@ -1768,6 +1880,21 @@ async function generateMatchCardUrl(config) {
     ctx.stroke();
 
     drawCanvasSoccerBall(ctx, 300, 590, 75);
+    
+    // Sujeira/Sombra na base da bola
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(300, 590, 75, 0, 2*Math.PI);
+    ctx.clip();
+    const dirtGrad = ctx.createRadialGradient(300, 620, 0, 300, 620, 90);
+    dirtGrad.addColorStop(0, 'rgba(20, 35, 25, 0.65)');
+    dirtGrad.addColorStop(0.6, 'rgba(10, 20, 15, 0.2)');
+    dirtGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = dirtGrad;
+    ctx.beginPath();
+    ctx.arc(300, 590, 75, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.restore();
 
     // 6. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Formato Shield Natural com Sombra 3D)
     const logoDonaCatarinaRaw = await loadCardImage('img/brasao.jpg?v=2');
@@ -1783,7 +1910,31 @@ async function generateMatchCardUrl(config) {
         ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 8;
+        
+        ctx.beginPath();
+        drawDonaCatarinaShieldPath(ctx, xDonaCatarina, yLogos, 130, 130);
+        ctx.clip();
+        
         ctx.drawImage(logoDonaCatarina, xDonaCatarina - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
+        ctx.restore();
+        
+        // Bordas 3D do escudo do Dona Catarina (Vermelha e Dourada)
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 4;
+        
+        ctx.strokeStyle = '#cc1f1f';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        drawDonaCatarinaShieldPath(ctx, xDonaCatarina, yLogos, 130, 130);
+        ctx.stroke();
+        
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        drawDonaCatarinaShieldPath(ctx, xDonaCatarina, yLogos, 130, 130);
+        ctx.stroke();
         ctx.restore();
     }
 
@@ -1799,8 +1950,15 @@ async function generateMatchCardUrl(config) {
         ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 8;
+        
+        ctx.save();
+        clipOpponentLogo(ctx, config.opponent, xOpponent, yLogos, 140, 140);
         ctx.drawImage(logoOpponent, xOpponent - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
         ctx.restore();
+        ctx.restore();
+        
+        // Molduras customizadas
+        drawOpponentBorder(ctx, config.opponent, xOpponent, yLogos, 140, 140);
     } else {
         // Fallback redondo se não encontrar logo
         ctx.save();
@@ -1808,7 +1966,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowBlur = 18;
         ctx.shadowOffsetY = 8;
         ctx.beginPath();
-        ctx.arc(xOpponent, yLogos, 65, 0, 2*Math.PI);
+        ctx.arc(xOpponent, yLogos, 62, 0, 2*Math.PI);
         ctx.fillStyle = '#1e293b';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
@@ -1824,38 +1982,30 @@ async function generateMatchCardUrl(config) {
         ctx.restore();
     }
 
-    // 8. Desenha o "X" com efeito de pinceladas no centro (Brush X)
+    // 8. Desenha o "X" com efeito de pinceladas no centro (Brush X de pincel seco)
     drawBrushX(ctx, 300, yLogos, 70);
 
-    // 9. Título da Partida ("AMISTOSO" em destaque com traço horizontal verde)
-    ctx.save();
-    ctx.font = 'italic bold 76px Impact, Arial Black, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 4;
-    
-    ctx.strokeStyle = '#111613';
-    ctx.lineWidth = 8;
-    ctx.strokeText(config.type.toUpperCase(), 300, 35);
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(config.type.toUpperCase(), 300, 35);
-    ctx.restore();
+    // 9. Título da Partida ("AMISTOSO" em destaque com traço horizontal verde e estêncil grunge)
+    drawGrungeText(ctx, config.type.toUpperCase(), 300, 35, 'italic bold 76px Impact, Arial Black, sans-serif', '#ffffff', '#111613', 8);
 
     // Linha verde texturizada abaixo do título
     ctx.fillStyle = '#1b7843';
     ctx.fillRect(100, 122, 400, 4);
 
-    // 10. Faixa de DATA (Pílula com Borda Verde e Ícone do Calendário)
+    // 10. Faixa de DATA (Pílula com Borda Verde, divisor vertical e Ícone do Calendário)
     const dateText = config.date.toUpperCase();
-    drawPremiumRoundedRect(ctx, 40, 340, 520, 48, 8, '#070e0a', '#214c25', 'rgba(0,0,0,0.5)', 8, 3);
+    drawPremiumRoundedRect(ctx, 40, 340, 520, 48, 8, '#09120c', '#21723c', 'rgba(0,0,0,0.5)', 8, 3);
     
-    // Ícone Calendário
-    drawPremiumRoundedRect(ctx, 52, 346, 36, 36, 4, 'rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.15)');
-    drawCalendarIcon(ctx, 60, 350, 20, 20);
+    // Divisor vertical verde
+    ctx.strokeStyle = '#21723c';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(100, 340);
+    ctx.lineTo(100, 388);
+    ctx.stroke();
+
+    // Desenha o ícone
+    drawCalendarIcon(ctx, 58, 352, 24, 24);
     
     // Texto com a data destacada em verde
     drawColoredText(ctx, dateText, 105, 364, 'bold 22px Montserrat, Arial, sans-serif', '#ffffff', '#6cc04a');
