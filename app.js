@@ -1377,73 +1377,237 @@ function drawTechBanner(ctx, x, y, width, height, cutSize, fillColor, borderColo
 }
 
 // Função principal de desenho do Card no Canvas (Estilo Futurista/Gamer)
+// Desenha um pentágono para o padrão da bola de futebol
+function drawCanvasPentagon(ctx, x, y, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+        const angle = -Math.PI/2 + (i * 2 * Math.PI) / 5;
+        ctx.lineTo(x + Math.cos(angle) * r, y + Math.sin(angle) * r);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#111612';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#1e2920';
+    ctx.stroke();
+}
+
+// Desenha a bola de futebol no rodapé de forma sombreada e tridimensional
+function drawCanvasSoccerBall(ctx, cx, cy, r) {
+    ctx.save();
+    
+    // Gradiente esférico para dar tridimensionalidade
+    const ballGrad = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, 0, cx, cy, r);
+    ballGrad.addColorStop(0, '#ffffff');
+    ballGrad.addColorStop(0.7, '#cbd5e0');
+    ballGrad.addColorStop(1, '#68756c');
+    
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2*Math.PI);
+    ctx.fillStyle = ballGrad;
+    ctx.fill();
+    
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#1a201c';
+    ctx.stroke();
+    ctx.clip();
+
+    // Pentagono central
+    drawCanvasPentagon(ctx, cx, cy, r * 0.35);
+
+    // Linhas estendidas
+    const angleStep = (2 * Math.PI) / 5;
+    const offsetAngle = -Math.PI / 2;
+    for (let i = 0; i < 5; i++) {
+        const angle = offsetAngle + i * angleStep;
+        const px = cx + Math.cos(angle) * r * 0.35;
+        const py = cy + Math.sin(angle) * r * 0.35;
+        const ex = cx + Math.cos(angle) * r;
+        const ey = cy + Math.sin(angle) * r;
+        
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        // Puffs/Pentágonos pretos das bordas
+        ctx.beginPath();
+        ctx.arc(ex, ey, r * 0.28, 0, 2*Math.PI);
+        ctx.fillStyle = '#111612';
+        ctx.fill();
+        ctx.stroke();
+    }
+    
+    ctx.restore();
+}
+
+// Desenha nuvens de fumaça sutil para dar atmosfera ao estádio
+function drawSmokePuff(ctx, cx, cy, r) {
+    ctx.save();
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grad.addColorStop(0, 'rgba(12, 28, 18, 0.4)'); // Fumaça verde-escura
+    grad.addColorStop(0.5, 'rgba(5, 12, 8, 0.18)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.restore();
+}
+
+// Desenha banco de refletores (bulbos emissores de luz em grade)
+function drawSpotlightCluster(ctx, cx, cy) {
+    ctx.save();
+    // Glow circular difuso
+    const backing = ctx.createRadialGradient(cx, cy, 0, cx, cy, 140);
+    backing.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+    backing.addColorStop(0.4, 'rgba(0, 255, 102, 0.09)');
+    backing.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = backing;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 140, 0, 2*Math.PI);
+    ctx.fill();
+
+    // Linhas de feixe de luz principal dos refletores
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    if (cx < 300) {
+        ctx.lineTo(-50, 600);
+        ctx.lineTo(280, 600);
+    } else {
+        ctx.lineTo(320, 600);
+        ctx.lineTo(650, 600);
+    }
+    ctx.closePath();
+    const beam = ctx.createLinearGradient(cx, cy, cx < 300 ? 100 : 500, 600);
+    beam.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+    beam.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = beam;
+    ctx.fill();
+
+    // Grade de bulbos emissores (2 linhas por 4 colunas)
+    const rows = 2;
+    const cols = 4;
+    const spacing = 12;
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 12;
+    
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const bx = cx + (c - (cols - 1) / 2) * spacing;
+            const by = cy + (r - (rows - 1) / 2) * spacing;
+            ctx.beginPath();
+            ctx.arc(bx, by, 3.5, 0, 2*Math.PI);
+            ctx.fill();
+        }
+    }
+    ctx.restore();
+}
+
+// Função principal de desenho do Card no Canvas (Fusão: Estádio Realista e Elementos Futuristas)
 async function generateMatchCardUrl(config) {
     const canvas = document.createElement('canvas');
     canvas.width = 600;
     canvas.height = 600;
     const ctx = canvas.getContext('2d');
 
-    // 1. Fundo Espacial/Cibernético com Gradiente Radial do Escuro para o Verde Neon
-    const radialBg = ctx.createRadialGradient(300, 300, 50, 300, 300, 400);
-    radialBg.addColorStop(0, '#0a2312'); // Centro verde floresta escuro
-    radialBg.addColorStop(0.7, '#040b07'); // Transição quase preta
-    radialBg.addColorStop(1, '#020503'); // Borda preta absoluta
-    ctx.fillStyle = radialBg;
+    // 1. Fundo do Estádio (Gradiente de atmosfera escura)
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, 600);
+    skyGrad.addColorStop(0, '#010502'); // Topo preto absoluto
+    skyGrad.addColorStop(0.5, '#041007'); // Verde escuro
+    skyGrad.addColorStop(0.8, '#082110'); 
+    skyGrad.addColorStop(1, '#082613'); 
+    ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, 600, 600);
 
-    // 2. Grade de Perspectiva Tecnológica (Cyber Grid)
-    ctx.strokeStyle = 'rgba(0, 255, 102, 0.04)';
+    // 2. Gramado do Estádio (y=420 a 600)
+    const pitchY = 420;
+    const pitchHeight = 180;
+    const grassGrad = ctx.createLinearGradient(0, pitchY, 0, 600);
+    grassGrad.addColorStop(0, '#082e16');
+    grassGrad.addColorStop(1, '#020f07');
+    ctx.fillStyle = grassGrad;
+    ctx.fillRect(0, pitchY, 600, pitchHeight);
+
+    // Desenhar listras do gramado em perspectiva
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, pitchY, 600, pitchHeight);
+    ctx.clip();
+    
+    const vpX = 300; // Ponto de fuga
+    const vpY = 380;
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
+    for (let i = -12; i <= 24; i += 2) {
+        ctx.beginPath();
+        ctx.moveTo(vpX, vpY);
+        ctx.lineTo(i * 35 - 120, 600);
+        ctx.lineTo((i + 1) * 35 - 120, 600);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // 3. Efeito de Fumaça/Neblina no fundo
+    drawSmokePuff(ctx, 100, 480, 140);
+    drawSmokePuff(ctx, 500, 480, 140);
+    drawSmokePuff(ctx, 300, 520, 160);
+
+    // 4. Refletores acesos (Bulbos de luz de estádio + feixes)
+    drawSpotlightCluster(ctx, 60, 60);
+    drawSpotlightCluster(ctx, 540, 60);
+
+    // 5. Linha da grande área (penalty box) e Bola de Futebol Realista
+    ctx.beginPath();
+    ctx.arc(300, 590, 135, Math.PI, 2*Math.PI);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+
+    drawCanvasSoccerBall(ctx, 300, 590, 75);
+
+    // 6. Grade e Efeitos Ciber-Futuristas (Sobrepostos de forma sutil)
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.035)'; // Cyber grid de fundo
     ctx.lineWidth = 1;
     const gridSize = 40;
     for (let x = 0; x <= 600; x += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, 600);
+        ctx.moveTo(x, 0); ctx.lineTo(x, 600);
         ctx.stroke();
     }
     for (let y = 0; y <= 600; y += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(600, y);
+        ctx.moveTo(0, y); ctx.lineTo(600, y);
         ctx.stroke();
     }
 
-    // Linhas diagonais cruzadas (Efeito HUD tecnológico)
-    ctx.strokeStyle = 'rgba(241, 196, 15, 0.12)'; // Dourado sutil
-    ctx.lineWidth = 1;
+    // Linhas em cruz douradas (HUD)
+    ctx.strokeStyle = 'rgba(241, 196, 15, 0.08)';
     ctx.beginPath();
-    ctx.moveTo(0, 0); ctx.lineTo(180, 180);
-    ctx.moveTo(600, 0); ctx.lineTo(420, 180);
-    ctx.moveTo(0, 600); ctx.lineTo(180, 420);
-    ctx.moveTo(600, 600); ctx.lineTo(420, 420);
+    ctx.moveTo(0, 0); ctx.lineTo(160, 160);
+    ctx.moveTo(600, 0); ctx.lineTo(440, 160);
+    ctx.moveTo(0, 600); ctx.lineTo(160, 440);
+    ctx.moveTo(600, 600); ctx.lineTo(440, 440);
     ctx.stroke();
 
-    // 3. Efeitos de Laser de Neon no fundo
-    ctx.strokeStyle = 'rgba(0, 255, 102, 0.2)';
+    // Lasers neon brilhantes
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.15)';
     ctx.lineWidth = 2;
     ctx.shadowColor = '#00ff66';
     ctx.shadowBlur = 10;
-    
-    // Laser Superior Horizontal
-    ctx.beginPath();
-    ctx.moveTo(0, 120);
-    ctx.lineTo(600, 120);
-    ctx.stroke();
-    
-    // Laser Inferior Horizontal
-    ctx.beginPath();
-    ctx.moveTo(0, 520);
-    ctx.lineTo(600, 520);
-    ctx.stroke();
-    ctx.shadowBlur = 0; // Desliga glow
+    ctx.beginPath(); ctx.moveTo(0, 120); ctx.lineTo(600, 120); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, 520); ctx.lineTo(600, 520); ctx.stroke();
+    ctx.restore();
 
-    // 4. Carregar e Desenhar Brasão Dona Catarina (Esquerda)
+    // 7. Carregar e Desenhar Brasão Dona Catarina (Esquerda)
     const logoDonaCatarina = await loadCardImage('img/brasao.jpg?v=2');
     const xDonaCatarina = 150;
     const yLogos = 250;
     const rLogos = 65;
 
-    // Corte circular para o escudo do Dona Catarina
     ctx.save();
     ctx.beginPath();
     ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
@@ -1468,7 +1632,7 @@ async function generateMatchCardUrl(config) {
     ctx.lineWidth = 4;
     ctx.stroke();
 
-    // Anel de Neon Verde Tracejado (Externo - Holográfico)
+    // Anel de Neon Verde Tracejado (Externo)
     ctx.save();
     ctx.beginPath();
     ctx.arc(xDonaCatarina, yLogos, rLogos + 8, 0, 2*Math.PI);
@@ -1480,12 +1644,11 @@ async function generateMatchCardUrl(config) {
     ctx.stroke();
     ctx.restore();
 
-    // 5. Carregar e Desenhar Brasão do Adversário (Direita)
+    // 8. Carregar e Desenhar Brasão do Adversário (Direita)
     const opponentLogoUrl = getOpponentLogoUrlForCard(config.opponent);
     const logoOpponent = opponentLogoUrl ? await loadCardImage(opponentLogoUrl) : null;
     const xOpponent = 450;
 
-    // Corte circular para o escudo do adversário
     ctx.save();
     ctx.beginPath();
     ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
@@ -1511,7 +1674,7 @@ async function generateMatchCardUrl(config) {
     ctx.lineWidth = 4;
     ctx.stroke();
 
-    // Anel de Neon Vermelho Tracejado (Externo - Holográfico)
+    // Anel de Neon Vermelho Tracejado (Externo)
     ctx.save();
     ctx.beginPath();
     ctx.arc(xOpponent, yLogos, rLogos + 8, 0, 2*Math.PI);
@@ -1523,7 +1686,7 @@ async function generateMatchCardUrl(config) {
     ctx.stroke();
     ctx.restore();
 
-    // 6. Texto "VS" (Versus) centralizado com Brilho Neon Dourado
+    // 9. Texto "VS" centralizado com Brilho Neon Dourado
     ctx.save();
     ctx.font = 'italic bold 48px Impact, Arial Black, sans-serif';
     ctx.fillStyle = '#f1c40f'; // Dourado
@@ -1544,7 +1707,7 @@ async function generateMatchCardUrl(config) {
     ctx.moveTo(325, yLogos + 15); ctx.lineTo(325, yLogos + 25); ctx.lineTo(315, yLogos + 25);
     ctx.stroke();
 
-    // 7. Título Principal (AMISTOSO / CAMPEONATO)
+    // 10. Título Principal (AMISTOSO / CAMPEONATO)
     ctx.save();
     ctx.font = 'italic bold 64px Impact, Arial Black, sans-serif';
     ctx.textAlign = 'center';
@@ -1562,7 +1725,7 @@ async function generateMatchCardUrl(config) {
     ctx.fillText(config.type, 300, 38);
     ctx.restore();
 
-    // 8. Faixa de DATA (Estilo Tech Chanfrada Preta e Neon Verde)
+    // 11. Faixa de DATA (Estilo Tech Chanfrada Preta e Neon Verde)
     const dateText = config.date.toUpperCase();
     drawTechBanner(ctx, 110, 350, 380, 44, 8, 'rgba(11, 22, 16, 0.95)', '#00ff66');
     
@@ -1572,7 +1735,7 @@ async function generateMatchCardUrl(config) {
     ctx.textBaseline = 'middle';
     ctx.fillText(`📅  ${dateText}`, 300, 372);
 
-    // 9. Faixa de LOCAL E HORA (Estilo Tech Chanfrada Vermelha e Dourada)
+    // 12. Faixa de LOCAL E HORA (Estilo Tech Chanfrada Vermelha e Dourada)
     const localText = `${config.location.toUpperCase()}  -  ${config.time.toUpperCase()}`;
     drawTechBanner(ctx, 50, 415, 500, 46, 10, 'rgba(204, 31, 31, 0.95)', '#f1c40f');
     
@@ -1582,7 +1745,7 @@ async function generateMatchCardUrl(config) {
     ctx.textBaseline = 'middle';
     ctx.fillText(`📍  ${localText}`, 300, 438);
 
-    // 10. Faixa de CHAMADA / INFORMAÇÃO (Estilo Tech Chanfrada Verde Escuro e Branca)
+    // 13. Faixa de CHAMADA / INFORMAÇÃO (Estilo Tech Chanfrada Verde Escuro e Branca)
     const footerText = config.footer.toUpperCase();
     drawTechBanner(ctx, 80, 480, 440, 40, 8, 'rgba(9, 59, 31, 0.95)', '#ffffff');
     
@@ -1592,7 +1755,6 @@ async function generateMatchCardUrl(config) {
     ctx.textBaseline = 'middle';
     ctx.fillText(footerText, 300, 500);
 
-    // Retorna a imagem codificada em Base64
     return canvas.toDataURL('image/png');
 }
 
