@@ -1256,9 +1256,9 @@ footer {
 }
 
 .history-teams-display {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: center;
     gap: 1.5rem;
     flex: 1;
 }
@@ -1267,7 +1267,7 @@ footer {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    flex: 1;
+    min-width: 0;
 }
 
 .history-team-side.home {
@@ -1343,6 +1343,7 @@ footer {
     }
     
     .history-teams-display {
+        display: flex;
         flex-direction: column;
         gap: 0.5rem;
         width: 100%;
