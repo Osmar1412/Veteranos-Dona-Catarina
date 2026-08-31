@@ -1738,51 +1738,42 @@ function drawSantosShieldPath(ctx, x, y, w, h) {
     ctx.closePath();
 }
 
-// Recorta o logotipo do oponente com base no seu formato conhecido para evitar caixa quadrada branca
-function clipOpponentLogo(ctx, opponentName, x, y, w, h) {
-    const name = opponentName.toUpperCase();
-    if (name.includes('GRÁFICA') || name.includes('GRAFICA') || name.includes('FM')) {
-        ctx.beginPath();
-        ctx.arc(x, y, 62, 0, 2*Math.PI);
-        ctx.clip();
-    } else if (name.includes('SÃO JOSÉ') || name.includes('SAO JOSE') || name.includes('SAO JOSÉ') || name.includes('SAO JOSÉ') || name.includes('VSJFC')) {
-        drawSantosShieldPath(ctx, x, y, 125, 125);
-        ctx.clip();
-    } else if (name.includes('SÃO JOÃO') || name.includes('SAO JOAO')) {
-        drawDonaCatarinaShieldPath(ctx, x, y, 120, 120);
-        ctx.clip();
-    } else if (name.includes('GRANJA') || name.includes('SELECTA') || name.includes('INIMIGOS')) {
-        // Sem recorte (Granja é PNG transparente, Inimigos tem coroa de louros externa)
-    } else {
-        // Fallback padrão circular
-        ctx.beginPath();
-        ctx.arc(x, y, 62, 0, 2*Math.PI);
-        ctx.clip();
-    }
+// Subtrai 1 hora do horário do jogo para sugerir o horário de saída
+function subtractOneHour(timeStr) {
+    if (!timeStr) return '';
+    const cleanTime = timeStr.replace('ÀS ', '').replace('AS ', '').trim();
+    const parts = cleanTime.split(':');
+    if (parts.length < 2) return '';
+    let hour = parseInt(parts[0], 10);
+    let min = parseInt(parts[1], 10);
+    if (isNaN(hour) || isNaN(min)) return '';
+    hour = (hour - 1 + 24) % 24;
+    return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
 }
 
-// Desenha a moldura 3D correspondente ao corte do oponente
-function drawOpponentBorder(ctx, opponentName, x, y, w, h) {
-    const name = opponentName.toUpperCase();
-    ctx.save();
+// Desenha o ícone de ônibus programaticamente
+function drawBusIcon(ctx, x, y, w, h) {
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 4;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 4;
-    
-    if (name.includes('GRÁFICA') || name.includes('GRAFICA') || name.includes('FM')) {
-        ctx.beginPath();
-        ctx.arc(x, y, 62, 0, 2*Math.PI);
-        ctx.stroke();
-    } else if (name.includes('SÃO JOSÉ') || name.includes('SAO JOSE') || name.includes('SAO JOSÉ') || name.includes('SAO JOSÉ') || name.includes('VSJFC')) {
-        drawSantosShieldPath(ctx, x, y, 125, 125);
-        ctx.stroke();
-    } else if (name.includes('SÃO JOÃO') || name.includes('SAO JOAO')) {
-        drawDonaCatarinaShieldPath(ctx, x, y, 120, 120);
-        ctx.stroke();
-    }
-    ctx.restore();
+    ctx.lineWidth = 2;
+    // Corpo principal do ônibus
+    ctx.strokeRect(x, y + 2, w, h - 6);
+    // Janela do parabrisa (dividida ao meio por um pilar fino)
+    ctx.strokeRect(x + 2, y + 4, w - 4, h/3 - 1);
+    ctx.beginPath();
+    ctx.moveTo(x + w/2, y + 4);
+    ctx.lineTo(x + w/2, y + 4 + h/3 - 1);
+    ctx.stroke();
+    // Faróis dianteiros (pequenos retângulos ou círculos preenchidos)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 4, y + h - 8, 4, 3);
+    ctx.fillRect(x + w - 8, y + h - 8, 4, 3);
+    // Grade frontal ou para-choque
+    ctx.strokeRect(x + 10, y + h - 7, w - 20, 2);
+    // Rodas (círculos preenchidos cortados levemente)
+    ctx.beginPath();
+    ctx.arc(x + 5, y + h - 2, 3, 0, 2*Math.PI);
+    ctx.arc(x + w - 5, y + h - 2, 3, 0, 2*Math.PI);
+    ctx.fill();
 }
 
 // Desenha texto com efeito grunge/desgastado de estêncil
@@ -1841,6 +1832,10 @@ async function generateMatchCardUrl(config) {
     canvas.height = 600;
     const ctx = canvas.getContext('2d');
 
+    const hasDeparture = config.departureLoc && config.departureTime;
+    const yStart = hasDeparture ? 315 : 335;
+    const bannerGap = 56;
+
     // 1. Fundo do Estádio (Céu escuro degradê com neblina)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, 600);
     skyGrad.addColorStop(0, '#010503'); // Topo preto
@@ -1850,7 +1845,29 @@ async function generateMatchCardUrl(config) {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, 600, 600);
 
-    // 2. Gramado do Estádio (y=420 a 600)
+    // 2. Backlight dourado atrás dos escudos para impacto visual premium
+    const yLogos = 235;
+    const logoGlow = ctx.createRadialGradient(300, yLogos, 10, 300, yLogos, 220);
+    logoGlow.addColorStop(0, 'rgba(212, 175, 55, 0.22)');
+    logoGlow.addColorStop(0.5, 'rgba(19, 117, 71, 0.12)');
+    logoGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = logoGlow;
+    ctx.beginPath();
+    ctx.arc(300, yLogos, 220, 0, 2*Math.PI);
+    ctx.fill();
+
+    // Faíscas brilhantes flutuantes na arena
+    ctx.fillStyle = 'rgba(241, 196, 15, 0.45)';
+    for (let i = 0; i < 20; i++) {
+        const px = 300 + (Math.random() - 0.5) * 380;
+        const py = yLogos + (Math.random() - 0.5) * 165;
+        const r = 1 + Math.random() * 2.5;
+        ctx.beginPath();
+        ctx.arc(px, py, r, 0, 2*Math.PI);
+        ctx.fill();
+    }
+
+    // 3. Gramado do Estádio (y=420 a 600)
     const pitchY = 420;
     const pitchHeight = 180;
     const grassGrad = ctx.createLinearGradient(0, pitchY, 0, 600);
@@ -1879,82 +1896,60 @@ async function generateMatchCardUrl(config) {
     }
     ctx.restore();
 
-    // 3. Névoa e Fumaça de Estádio
+    // 4. Névoa e Fumaça de Estádio
     drawSmokePuff(ctx, 100, 480, 150);
     drawSmokePuff(ctx, 500, 480, 150);
     drawSmokePuff(ctx, 300, 520, 170);
 
-    // 4. Refletores acesos (Luz volumétrica volumosa e natural)
+    // 5. Refletores acesos (Luz volumétrica volumosa e natural)
     drawHazySpotlight(ctx, 60, 50, 120);
     drawHazySpotlight(ctx, 540, 50, -120);
 
-    // 5. Linha branca da grande área e Bola de Futebol no rodapé (com sombra/sujeira na bola)
+    // 6. Linha branca da grande área e Bola de Futebol no rodapé (com tamanho dinâmico)
+    const ballRadius = hasDeparture ? 65 : 75;
+    const ballY = hasDeparture ? 600 : 590;
+    
     ctx.beginPath();
-    ctx.arc(300, 590, 135, Math.PI, 2*Math.PI);
+    ctx.arc(300, ballY, 135, Math.PI, 2*Math.PI);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.lineWidth = 3.5;
     ctx.stroke();
 
-    drawCanvasSoccerBall(ctx, 300, 590, 75);
+    drawCanvasSoccerBall(ctx, 300, ballY, ballRadius);
     
     // Sujeira/Sombra na base da bola
     ctx.save();
     ctx.beginPath();
-    ctx.arc(300, 590, 75, 0, 2*Math.PI);
+    ctx.arc(300, ballY, ballRadius, 0, 2*Math.PI);
     ctx.clip();
-    const dirtGrad = ctx.createRadialGradient(300, 620, 0, 300, 620, 90);
+    const dirtGrad = ctx.createRadialGradient(300, ballY + 30, 0, 300, ballY + 30, ballRadius * 1.2);
     dirtGrad.addColorStop(0, 'rgba(20, 35, 25, 0.65)');
     dirtGrad.addColorStop(0.6, 'rgba(10, 20, 15, 0.2)');
     dirtGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = dirtGrad;
     ctx.beginPath();
-    ctx.arc(300, 590, 75, 0, 2*Math.PI);
+    ctx.arc(300, ballY, ballRadius, 0, 2*Math.PI);
     ctx.fill();
     ctx.restore();
 
-    // 6. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Formato Shield Natural com Sombra 3D)
+    // 7. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Formato Shield Natural com Sombra 3D)
     const logoDonaCatarinaRaw = await loadCardImage('img/brasao.jpg?v=2');
     const logoDonaCatarina = logoDonaCatarinaRaw ? makeBackgroundTransparent(logoDonaCatarinaRaw) : null;
     const xDonaCatarina = 140;
-    const yLogos = 240;
-    const logoWidth = 150;
-    const logoHeight = 150;
+    const logoWidth = 145;
+    const logoHeight = 145;
 
     if (logoDonaCatarina) {
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
         ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 8;
-        
-        ctx.beginPath();
-        drawDonaCatarinaShieldPath(ctx, xDonaCatarina, yLogos, 130, 130);
-        ctx.clip();
-        
+        ctx.shadowOffsetY = 10;
         ctx.drawImage(logoDonaCatarina, xDonaCatarina - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
-        ctx.restore();
-        
-        // Bordas 3D do escudo do Dona Catarina (Vermelha e Dourada)
-        ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 4;
-        
-        ctx.strokeStyle = '#cc1f1f';
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        drawDonaCatarinaShieldPath(ctx, xDonaCatarina, yLogos, 130, 130);
-        ctx.stroke();
-        
-        ctx.strokeStyle = '#d4af37';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        drawDonaCatarinaShieldPath(ctx, xDonaCatarina, yLogos, 130, 130);
-        ctx.stroke();
         ctx.restore();
     }
 
-    // 7. Carregar e Desenhar Brasão do Adversário (Direita - Formato Natural com Sombra 3D)
+    // 8. Carregar e Desenhar Brasão do Adversário (Direita - Formato Natural com Sombra 3D)
     const opponentLogoUrl = getOpponentLogoUrlForCard(config.opponent);
     const logoOpponentRaw = opponentLogoUrl ? await loadCardImage(opponentLogoUrl) : null;
     const logoOpponent = logoOpponentRaw ? makeBackgroundTransparent(logoOpponentRaw) : null;
@@ -1962,19 +1957,12 @@ async function generateMatchCardUrl(config) {
 
     if (logoOpponent) {
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
         ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 8;
-        
-        ctx.save();
-        clipOpponentLogo(ctx, config.opponent, xOpponent, yLogos, 140, 140);
+        ctx.shadowOffsetY = 10;
         ctx.drawImage(logoOpponent, xOpponent - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
         ctx.restore();
-        ctx.restore();
-        
-        // Molduras customizadas
-        drawOpponentBorder(ctx, config.opponent, xOpponent, yLogos, 140, 140);
     } else {
         // Fallback redondo se não encontrar logo
         ctx.save();
@@ -1998,47 +1986,74 @@ async function generateMatchCardUrl(config) {
         ctx.restore();
     }
 
-    // 8. Desenha o "X" com efeito de pinceladas no centro (Brush X de pincel seco)
+    // 9. Desenha o "X" com efeito de pinceladas no centro (Brush X de pincel seco)
     drawBrushX(ctx, 300, yLogos, 70);
 
-    // 9. Título da Partida ("AMISTOSO" em destaque com traço horizontal verde e estêncil grunge)
+    // 10. Título da Partida ("AMISTOSO" em destaque com traço horizontal verde e estêncil grunge)
     drawGrungeText(ctx, config.type.toUpperCase(), 300, 35, 'italic bold 76px Impact, Arial Black, sans-serif', '#ffffff', '#111613', 8);
 
     // Linha verde texturizada abaixo do título
     ctx.fillStyle = '#1b7843';
     ctx.fillRect(100, 122, 400, 4);
 
-    // 10. Faixa de DATA (Pílula com Borda Verde, divisor vertical e Ícone do Calendário)
+    // 11. Faixa de DATA (Pílula com Borda Verde, divisor vertical e Ícone do Calendário)
     const dateText = config.date.toUpperCase();
-    drawPremiumRoundedRect(ctx, 40, 340, 520, 48, 8, '#09120c', '#21723c', 'rgba(0,0,0,0.5)', 8, 3);
+    const dateY = yStart;
+    drawPremiumRoundedRect(ctx, 40, dateY, 520, 48, 8, '#09120c', '#21723c', 'rgba(0,0,0,0.5)', 8, 3);
     
     // Divisor vertical verde
     ctx.strokeStyle = '#21723c';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(100, 340);
-    ctx.lineTo(100, 388);
+    ctx.moveTo(100, dateY);
+    ctx.lineTo(100, dateY + 48);
     ctx.stroke();
 
     // Desenha o ícone
-    drawCalendarIcon(ctx, 58, 352, 24, 24);
+    drawCalendarIcon(ctx, 58, dateY + 12, 24, 24);
     
     // Texto com a data destacada em verde
-    drawColoredText(ctx, dateText, 105, 364, 'bold 22px Montserrat, Arial, sans-serif', '#ffffff', '#6cc04a');
+    drawColoredText(ctx, dateText, 115, dateY + 24, 'italic bold 21px Impact, Montserrat, sans-serif', '#ffffff', '#6cc04a');
 
-    // 11. Faixa de LOCAL E HORA (Pílula com Borda Verde e Ícone do Campo)
+    // 12. Faixa de LOCAL E HORA (Pílula com Borda Verde, divisor vertical e Ícone do Campo)
     const localText = config.location.toUpperCase();
-    drawPremiumRoundedRect(ctx, 40, 405, 520, 48, 8, '#070e0a', '#214c25', 'rgba(0,0,0,0.5)', 8, 3);
+    const localY = yStart + bannerGap;
+    drawPremiumRoundedRect(ctx, 40, localY, 520, 48, 8, '#09120c', '#21723c', 'rgba(0,0,0,0.5)', 8, 3);
     
-    // Ícone Campo de Futebol
-    drawPremiumRoundedRect(ctx, 52, 411, 36, 36, 4, 'rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.15)');
-    drawPitchIcon(ctx, 60, 422, 20, 14);
+    // Divisor vertical verde
+    ctx.beginPath();
+    ctx.moveTo(100, localY);
+    ctx.lineTo(100, localY + 48);
+    ctx.stroke();
+
+    // Desenha o ícone
+    drawPitchIcon(ctx, 56, localY + 14, 28, 20);
     
     // Texto do Local
-    drawColoredText(ctx, localText, 105, 429, 'bold 22px Montserrat, Arial, sans-serif', '#ffffff', '#6cc04a');
+    drawColoredText(ctx, localText, 115, localY + 24, 'italic bold 21px Impact, Montserrat, sans-serif', '#ffffff', '#6cc04a');
 
-    // 12. Faixa de CHAMADA / INFORMAÇÃO ("CONTAMOS COM A PRESENÇA DE TODOS" em duas linhas sobre pincelada verde)
-    drawGreenBrushBackground(ctx, 60, 465, 480, 62);
+    // 13. Faixa de PARTIDA / SAÍDA (Opcional - Apenas jogos fora de casa)
+    if (hasDeparture) {
+        const departureY = yStart + bannerGap * 2;
+        const departureText = `SAÍDA: ${config.departureLoc.toUpperCase()} ÀS ${config.departureTime.toUpperCase()}`;
+        drawPremiumRoundedRect(ctx, 40, departureY, 520, 48, 8, '#09120c', '#21723c', 'rgba(0,0,0,0.5)', 8, 3);
+        
+        // Divisor vertical verde
+        ctx.beginPath();
+        ctx.moveTo(100, departureY);
+        ctx.lineTo(100, departureY + 48);
+        ctx.stroke();
+
+        // Desenha o ícone do ônibus
+        drawBusIcon(ctx, 58, departureY + 12, 24, 24);
+        
+        // Texto de Partida
+        drawColoredText(ctx, departureText, 115, departureY + 24, 'italic bold 21px Impact, Montserrat, sans-serif', '#ffffff', '#6cc04a');
+    }
+
+    // 14. Faixa de CHAMADA / INFORMAÇÃO ("CONTAMOS COM A PRESENÇA DE TODOS" em duas linhas sobre pincelada verde)
+    const footerY = hasDeparture ? 485 : 460;
+    drawGreenBrushBackground(ctx, 60, footerY, 480, 62);
     
     ctx.save();
     ctx.textAlign = 'center';
@@ -2049,12 +2064,12 @@ async function generateMatchCardUrl(config) {
     // Linha 1: CONTAMOS COM A
     ctx.font = 'bold 17px Montserrat, Arial, sans-serif';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText("CONTAMOS COM A", 300, 482);
+    ctx.fillText("CONTAMOS COM A", 300, footerY + 17);
     
     // Linha 2: PRESENÇA DE TODOS
     ctx.font = 'italic bold 26px Impact, Montserrat, sans-serif';
     ctx.fillStyle = '#6cc04a';
-    ctx.fillText("PRESENÇA DE TODOS", 300, 508);
+    ctx.fillText("PRESENÇA DE TODOS", 300, footerY + 43);
     ctx.restore();
 
     return canvas.toDataURL('image/png');
@@ -2072,6 +2087,20 @@ function openCardGenerator(match) {
     document.getElementById('card-time-input').value = match.time.toUpperCase().replace('ÀS ', '').replace('AS ', '');
     document.getElementById('card-location-input').value = match.location.replace(/ \((Nosso Campo|Fora)\)/g, '').toUpperCase();
     document.getElementById('card-footer-input').value = "CONTAMOS COM A PRESENÇA DE TODOS";
+    
+    // Exibe ou oculta campos de saída/partida com base no mando do jogo (Casa vs Fora)
+    const departureLocInput = document.getElementById('card-departure-loc-input');
+    const departureTimeInput = document.getElementById('card-departure-time-input');
+    
+    if (match.isHome) {
+        // Se for em casa, limpa e deixa vazio para não desenhar o banner
+        if (departureLocInput) departureLocInput.value = '';
+        if (departureTimeInput) departureTimeInput.value = '';
+    } else {
+        // Se for fora de casa, sugere partida padrão
+        if (departureLocInput) departureLocInput.value = 'BAR DO DONA CATARINA';
+        if (departureTimeInput) departureTimeInput.value = subtractOneHour(match.time);
+    }
     
     // Tenta adivinhar se é amistoso ou campeonato com base no adversário ou histórico
     const typeSelect = document.getElementById('card-type-input');
@@ -2102,7 +2131,9 @@ async function generateAndPreviewCard() {
         opponent: document.getElementById('card-opponent-input').value,
         date: combinedDate,
         location: document.getElementById('card-location-input').value,
-        footer: document.getElementById('card-footer-input').value
+        footer: document.getElementById('card-footer-input').value,
+        departureLoc: document.getElementById('card-departure-loc-input').value.trim(),
+        departureTime: document.getElementById('card-departure-time-input').value.trim()
     };
 
     try {
