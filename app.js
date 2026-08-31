@@ -274,8 +274,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        // Escutar contatos do WhatsApp em tempo real
+        db.ref('contacts').on('value', (snapshot) => {
+            const val = snapshot.val();
+            // Contatos padrão como fallback se o nó estiver vazio no Firebase
+            const defaultContacts = [
+                { name: "Presidente - João", phone: "5511999999999" },
+                { name: "Diretoria - Pedro", phone: "5511999999999" }
+            ];
+            const contactsList = val || defaultContacts;
+            
+            // 1. Atualiza o seletor (select) do formulário público de propostas de desafio
+            const targetSelect = document.getElementById('contact-target-select');
+            if (targetSelect) {
+                targetSelect.innerHTML = '';
+                contactsList.forEach((c) => {
+                    if (c && c.name && c.phone) {
+                        const opt = document.createElement('option');
+                        opt.value = c.phone.replace(/[^0-9]/g, ''); // Limpa caracteres especiais
+                        opt.textContent = `${c.name} (${c.phone})`;
+                        targetSelect.appendChild(opt);
+                    }
+                });
+            }
+            
+            // 2. Preenche os inputs do formulário do Admin para edição
+            for (let i = 1; i <= 4; i++) {
+                const nameInput = document.getElementById(`contact-name-${i}`);
+                const phoneInput = document.getElementById(`contact-phone-${i}`);
+                const contact = contactsList[i - 1];
+                if (nameInput) nameInput.value = (contact && contact.name) ? contact.name : '';
+                if (phoneInput) phoneInput.value = (contact && contact.phone) ? contact.phone : '';
+            }
+        });
     } else {
         // Fallback local caso Firebase não esteja configurado
+        const defaultContacts = [
+            { name: "Presidente - João", phone: "5511999999999" },
+            { name: "Diretoria - Pedro", phone: "5511999999999" }
+        ];
+        const targetSelect = document.getElementById('contact-target-select');
+        if (targetSelect) {
+            targetSelect.innerHTML = '';
+            defaultContacts.forEach((c) => {
+                const opt = document.createElement('option');
+                opt.value = c.phone.replace(/[^0-9]/g, '');
+                opt.textContent = `${c.name} (${c.phone})`;
+                targetSelect.appendChild(opt);
+            });
+        }
         renderSquad('todos');
         renderMatches();
         renderScoreboard();
@@ -637,9 +685,9 @@ function initContactForm() {
         const matchTime = document.getElementById('contact-time').value;
         const message = document.getElementById('contact-message').value;
 
-        // Número de WhatsApp oficial do time (Pode ser alterado)
-        // Substitua pelo número real no formato internacional sem "+" ex: 5511999999999
-        const whatsappNumber = "5511999999999"; 
+        // Obtém o número de WhatsApp dinamicamente do select
+        const select = document.getElementById('contact-target-select');
+        const whatsappNumber = select && select.value ? select.value : "5511999999999"; 
 
         const formattedText = `Olá! Sou o ${repName} do time *${teamName}*.\nGostaria de agendar um jogo amistoso com os *Veteranos do Dona Catarina*.\n\n` + 
                               `📅 *Data Sugerida:* ${matchDate} (Domingo)\n` +
@@ -952,6 +1000,43 @@ function initAdminForm() {
         cancelMatchBtn.addEventListener('click', () => {
             resetMatchForm();
             showToast("Edição do confronto cancelada.");
+        });
+    }
+
+    // Salvar Contatos do WhatsApp no Firebase
+    const contactsForm = document.getElementById('admin-contacts-form');
+    if (contactsForm) {
+        contactsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const updatedContacts = [];
+            for (let i = 1; i <= 4; i++) {
+                const nameVal = document.getElementById(`contact-name-${i}`).value.trim();
+                const phoneVal = document.getElementById(`contact-phone-${i}`).value.trim();
+                if (nameVal && phoneVal) {
+                    updatedContacts.push({
+                        name: nameVal,
+                        phone: phoneVal.replace(/[^0-9]/g, '') // Remove parênteses, traços, espaços
+                    });
+                }
+            }
+            
+            if (updatedContacts.length === 0) {
+                showToast("Por favor, preencha pelo menos o Contato 1!", true);
+                return;
+            }
+            
+            if (useFirebase && db) {
+                db.ref('contacts').set(updatedContacts)
+                    .then(() => {
+                        showToast("Contatos do WhatsApp atualizados com sucesso!");
+                    })
+                    .catch((err) => {
+                        showToast("Erro ao salvar contatos no Firebase!", true);
+                    });
+            } else {
+                showToast("Contatos salvos localmente! (Firebase inativo)");
+            }
         });
     }
 }

@@ -249,6 +249,12 @@
                 <div class="form-card">
                     <form id="match-schedule-form">
                         <div class="form-group">
+                            <label for="contact-target-select">Falar com (Destinatário) *</label>
+                            <select id="contact-target-select" class="form-control" required>
+                                <option value="">Carregando contatos...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="contact-team">Nome da Sua Equipe *</label>
                             <input type="text" id="contact-team" class="form-control" placeholder="Ex: EC Veteranos de Sorocaba" required>
                         </div>
@@ -374,6 +380,66 @@
                         </div>
                         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; background: var(--color-green-primary); box-shadow: 0 4px 15px rgba(19, 117, 71, 0.3)">
                             Salvar Treinador
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Configuração de Contatos de WhatsApp -->
+                <div class="form-card" style="padding: 2rem; margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1.2rem; font-family: var(--font-heading); color: var(--color-green-light)">Contatos de WhatsApp</h3>
+                    <p style="font-size: 0.8rem; color: #a0aec0; margin-bottom: 1rem;">Cadastre até 4 contatos que aparecerão para o adversário escolher ao propor um desafio.</p>
+                    <form id="admin-contacts-form">
+                        <!-- Contato 1 -->
+                        <div style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.8rem; margin-bottom: 0.8rem;">
+                            <label style="font-weight: bold; font-size: 0.85rem; color: var(--color-gold);">Contato 1 (Padrão) *</label>
+                            <div class="form-row" style="margin-top: 0.3rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-name-1" class="form-control" placeholder="Nome (Ex: João - Presidente)" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-phone-1" class="form-control" placeholder="Telefone (Ex: 5511999999999)" required>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Contato 2 -->
+                        <div style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.8rem; margin-bottom: 0.8rem;">
+                            <label style="font-weight: bold; font-size: 0.85rem; color: var(--color-gold);">Contato 2</label>
+                            <div class="form-row" style="margin-top: 0.3rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-name-2" class="form-control" placeholder="Nome (Opcional)">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-phone-2" class="form-control" placeholder="Telefone (Opcional)">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Contato 3 -->
+                        <div style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.8rem; margin-bottom: 0.8rem;">
+                            <label style="font-weight: bold; font-size: 0.85rem; color: var(--color-gold);">Contato 3</label>
+                            <div class="form-row" style="margin-top: 0.3rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-name-3" class="form-control" placeholder="Nome (Opcional)">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-phone-3" class="form-control" placeholder="Telefone (Opcional)">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Contato 4 -->
+                        <div style="padding-bottom: 0.8rem; margin-bottom: 0.8rem;">
+                            <label style="font-weight: bold; font-size: 0.85rem; color: var(--color-gold);">Contato 4</label>
+                            <div class="form-row" style="margin-top: 0.3rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-name-4" class="form-control" placeholder="Nome (Opcional)">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <input type="text" id="contact-phone-4" class="form-control" placeholder="Telefone (Opcional)">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; background: var(--color-green-primary); box-shadow: 0 4px 15px rgba(19, 117, 71, 0.3)">
+                            Salvar Contatos
                         </button>
                     </form>
                 </div>
@@ -602,6 +668,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <!-- Script Principal -->
-    <script src="app.js?v=13"></script>
+    <script src="app.js?v=14"></script>
 </body>
 </html>
