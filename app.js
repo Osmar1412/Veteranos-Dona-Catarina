@@ -1932,36 +1932,79 @@ async function generateMatchCardUrl(config) {
     ctx.fill();
     ctx.restore();
 
-    // 7. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Formato Shield Natural com Sombra 3D)
+    // 7. Carregar e Desenhar Brasão Dona Catarina (Esquerda - Círculo Verde e Ouro como no site)
     const logoDonaCatarinaRaw = await loadCardImage('img/brasao.jpg?v=2');
-    const logoDonaCatarina = logoDonaCatarinaRaw ? makeBackgroundTransparent(logoDonaCatarinaRaw) : null;
     const xDonaCatarina = 140;
-    const logoWidth = 145;
-    const logoHeight = 145;
+    const rLogos = 65; // Raio idêntico ao do site
 
-    if (logoDonaCatarina) {
+    if (logoDonaCatarinaRaw) {
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+        // Efeito de sombra projetada (Drop Shadow)
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
         ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 10;
-        ctx.drawImage(logoDonaCatarina, xDonaCatarina - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
+        ctx.shadowOffsetY = 8;
+        
+        // Desenha o círculo de fundo verde escuro oficial do clube
+        ctx.beginPath();
+        ctx.arc(xDonaCatarina, yLogos, rLogos, 0, 2*Math.PI);
+        ctx.fillStyle = '#093b1f';
+        ctx.fill();
+        
+        // Recorta e desenha a imagem do brasão centralizada dentro do círculo verde
+        ctx.save();
+        ctx.clip();
+        ctx.drawImage(logoDonaCatarinaRaw, xDonaCatarina - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
+        ctx.restore();
+        
+        // Borda verde oficial ao redor do círculo
+        ctx.strokeStyle = '#137547';
+        ctx.lineWidth = 4.5;
+        ctx.stroke();
+        
+        // Fio de ouro (dourado oficial)
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
         ctx.restore();
     }
 
-    // 8. Carregar e Desenhar Brasão do Adversário (Direita - Formato Natural com Sombra 3D)
+    // 8. Carregar e Desenhar Brasão do Adversário (Direita - Formato Redondo Simétrico ou Bruto com Sombra 3D)
     const opponentLogoUrl = getOpponentLogoUrlForCard(config.opponent);
     const logoOpponentRaw = opponentLogoUrl ? await loadCardImage(opponentLogoUrl) : null;
-    const logoOpponent = logoOpponentRaw ? makeBackgroundTransparent(logoOpponentRaw) : null;
     const xOpponent = 460;
 
-    if (logoOpponent) {
+    if (logoOpponentRaw) {
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
         ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 10;
-        ctx.drawImage(logoOpponent, xOpponent - logoWidth/2, yLogos - logoHeight/2, logoWidth, logoHeight);
+        ctx.shadowOffsetY = 8;
+        
+        const nameUpper = config.opponent.toUpperCase();
+        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO');
+
+        if (needsCircularClip) {
+            // Círculo de fundo branco para oponente
+            ctx.beginPath();
+            ctx.arc(xOpponent, yLogos, rLogos, 0, 2*Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            
+            ctx.save();
+            ctx.clip();
+            ctx.drawImage(logoOpponentRaw, xOpponent - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
+            ctx.restore();
+            
+            // Borda branca circular
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4.5;
+            ctx.stroke();
+        } else {
+            // Desenha em formato natural/bruto (ex: Inimigos do Fim com a coroa de louros)
+            const logoOpponent = makeBackgroundTransparent(logoOpponentRaw);
+            ctx.drawImage(logoOpponent, xOpponent - rLogos, yLogos - rLogos, rLogos * 2, rLogos * 2);
+        }
         ctx.restore();
     } else {
         // Fallback redondo se não encontrar logo
@@ -1996,6 +2039,10 @@ async function generateMatchCardUrl(config) {
     ctx.fillStyle = '#1b7843';
     ctx.fillRect(100, 122, 400, 4);
 
+    // Fonte de Alta Legibilidade e Contraste para os dados (Sem Itálico comprimido)
+    const bannerFont = 'bold 20px Montserrat, Arial, sans-serif';
+    const textHighlightColor = '#f1c40f'; // Dourado oficial do clube para destaque máximo
+
     // 11. Faixa de DATA (Pílula com Borda Verde, divisor vertical e Ícone do Calendário)
     const dateText = config.date.toUpperCase();
     const dateY = yStart;
@@ -2012,8 +2059,8 @@ async function generateMatchCardUrl(config) {
     // Desenha o ícone
     drawCalendarIcon(ctx, 58, dateY + 12, 24, 24);
     
-    // Texto com a data destacada em verde
-    drawColoredText(ctx, dateText, 115, dateY + 24, 'italic bold 21px Impact, Montserrat, sans-serif', '#ffffff', '#6cc04a');
+    // Texto com a data destacada em dourado
+    drawColoredText(ctx, dateText, 115, dateY + 24, bannerFont, '#ffffff', textHighlightColor);
 
     // 12. Faixa de LOCAL E HORA (Pílula com Borda Verde, divisor vertical e Ícone do Campo)
     const localText = config.location.toUpperCase();
@@ -2030,7 +2077,7 @@ async function generateMatchCardUrl(config) {
     drawPitchIcon(ctx, 56, localY + 14, 28, 20);
     
     // Texto do Local
-    drawColoredText(ctx, localText, 115, localY + 24, 'italic bold 21px Impact, Montserrat, sans-serif', '#ffffff', '#6cc04a');
+    drawColoredText(ctx, localText, 115, localY + 24, bannerFont, '#ffffff', textHighlightColor);
 
     // 13. Faixa de PARTIDA / SAÍDA (Opcional - Apenas jogos fora de casa)
     if (hasDeparture) {
@@ -2048,7 +2095,7 @@ async function generateMatchCardUrl(config) {
         drawBusIcon(ctx, 58, departureY + 12, 24, 24);
         
         // Texto de Partida
-        drawColoredText(ctx, departureText, 115, departureY + 24, 'italic bold 21px Impact, Montserrat, sans-serif', '#ffffff', '#6cc04a');
+        drawColoredText(ctx, departureText, 115, departureY + 24, bannerFont, '#ffffff', textHighlightColor);
     }
 
     // 14. Faixa de CHAMADA / INFORMAÇÃO ("CONTAMOS COM A PRESENÇA DE TODOS" em duas linhas sobre pincelada verde)
