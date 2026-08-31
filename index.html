@@ -660,6 +660,22 @@
         </div>
     </div>
 
+    <!-- Modal de Alerta Customizado (Avisos de Domingo/Conflito) -->
+    <div id="custom-alert-modal" class="card-generator-modal" style="z-index: 3000;">
+        <div class="card-modal-content" style="max-width: 420px; text-align: center; border: 1.5px solid var(--color-gold);">
+            <div style="margin-bottom: 1.5rem; display: flex; justify-content: center;">
+                <div style="width: 86px; height: 86px; border-radius: 50%; border: 3px solid var(--color-gold); background: #093b1f; padding: 4px; box-shadow: 0 0 15px rgba(241, 196, 15, 0.35); overflow: hidden;">
+                    <img src="img/brasao.jpg?v=2" alt="Dona Catarina" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                </div>
+            </div>
+            <h3 style="font-family: var(--font-heading); color: var(--color-gold); margin-bottom: 1rem; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px;">Aviso</h3>
+            <p id="custom-alert-message" style="color: var(--color-white); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.8rem; font-weight: 500; text-align: center;"></p>
+            <div style="display: flex; justify-content: center;">
+                <button type="button" id="btn-custom-alert-ok" style="width: 100%; justify-content: center; font-weight: bold; background: var(--color-green-primary); border: none; padding: 0.75rem 1.5rem; border-radius: var(--border-radius-sm); color: white; cursor: pointer; font-family: var(--font-heading); text-transform: uppercase; transition: var(--transition-smooth); outline: none;">Entendido</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Contêiner de Toasts (Notificações do sistema) -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -668,6 +684,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <!-- Script Principal -->
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=16"></script>
 </body>
 </html>

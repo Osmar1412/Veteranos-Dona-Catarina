@@ -668,6 +668,32 @@ function renderHistory() {
 }
 
 /* ==========================================================================
+   ALERTAS CUSTOMIZADOS PREMIUM
+   ========================================================================== */
+
+// Exibe um modal de alerta customizado com o brasão do clube
+function showCustomAlert(message) {
+    const alertModal = document.getElementById('custom-alert-modal');
+    const alertMessage = document.getElementById('custom-alert-message');
+    const alertOkBtn = document.getElementById('btn-custom-alert-ok');
+    
+    if (alertModal && alertMessage && alertOkBtn) {
+        alertMessage.textContent = message;
+        alertModal.classList.add('active');
+        
+        // Manipulador para fechar o modal
+        const closeAlert = () => {
+            alertModal.classList.remove('active');
+            alertOkBtn.removeEventListener('click', closeAlert);
+        };
+        
+        // Garante que só há um listener ativo por abertura
+        alertOkBtn.removeEventListener('click', closeAlert);
+        alertOkBtn.addEventListener('click', closeAlert);
+    }
+}
+
+/* ==========================================================================
    FORMULÁRIO DE CONTATO/AGENDAMENTO
    ========================================================================== */
 
@@ -693,7 +719,7 @@ function initContactForm() {
 
             // 1. Validar se é Domingo (getDay() === 0)
             if (selectedDate.getDay() !== 0) {
-                alert("A data selecionada não é um domingo! Por favor, escolha um domingo.");
+                showCustomAlert("A data selecionada não é um domingo! Por favor, escolha um domingo.");
                 dateInput.value = '';
                 return;
             }
@@ -702,7 +728,7 @@ function initContactForm() {
             const formattedDateStr = `${String(day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`;
             const matchExists = matches.some(m => m.date === formattedDateStr);
             if (matchExists) {
-                alert(`Já existe um confronto agendado para o dia ${formattedDateStr}! Por favor, escolha outra data.`);
+                showCustomAlert(`Já existe um confronto agendado para o dia ${formattedDateStr}! Por favor, escolha outra data.`);
                 dateInput.value = '';
                 return;
             }
