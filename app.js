@@ -675,6 +675,40 @@ function initContactForm() {
     const contactForm = document.getElementById('match-schedule-form');
     if (!contactForm) return;
 
+    // Elemento do campo de data
+    const dateInput = document.getElementById('contact-date');
+    if (dateInput) {
+        dateInput.addEventListener('change', () => {
+            const val = dateInput.value;
+            if (!val) return;
+
+            // Converter a data do input (AAAA-MM-DD) para um objeto Date seguro
+            const parts = val.split('-');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            
+            // Usar meio-dia (12:00) para evitar problemas de fuso horário local
+            const selectedDate = new Date(year, month, day, 12, 0, 0);
+
+            // 1. Validar se é Domingo (getDay() === 0)
+            if (selectedDate.getDay() !== 0) {
+                alert("A data selecionada não é um domingo! Por favor, escolha um domingo.");
+                dateInput.value = '';
+                return;
+            }
+
+            // 2. Validar se já existe confronto agendado para este dia
+            const formattedDateStr = `${String(day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`;
+            const matchExists = matches.some(m => m.date === formattedDateStr);
+            if (matchExists) {
+                alert(`Já existe um confronto agendado para o dia ${formattedDateStr}! Por favor, escolha outra data.`);
+                dateInput.value = '';
+                return;
+            }
+        });
+    }
+
     contactForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
@@ -689,8 +723,12 @@ function initContactForm() {
         const select = document.getElementById('contact-target-select');
         const whatsappNumber = select && select.value ? select.value : "5511999999999"; 
 
+        // Formata a data de AAAA-MM-DD para DD/MM/AAAA antes do envio
+        const parts = matchDate.split('-');
+        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
         const formattedText = `Olá! Sou o ${repName} do time *${teamName}*.\nGostaria de agendar um jogo amistoso com os *Veteranos do Dona Catarina*.\n\n` + 
-                              `📅 *Data Sugerida:* ${matchDate} (Domingo)\n` +
+                              `📅 *Data Sugerida:* ${formattedDate} (Domingo)\n` +
                               `⏰ *Horário:* ${matchTime}\n` +
                               `📞 *Contato:* ${repPhone}\n\n` +
                               `📝 *Recado:* ${message}`;
