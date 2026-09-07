@@ -450,7 +450,19 @@
                     <form id="add-match-form">
                         <div class="form-group">
                             <label for="match-opponent-input">Adversário *</label>
-                            <input type="text" id="match-opponent-input" class="form-control" placeholder="Ex: Granja Selecta F.C." required>
+                            <input type="text" id="match-opponent-input" list="opponents-list" class="form-control" placeholder="Selecione ou digite o adversário" required>
+                            <datalist id="opponents-list">
+                                <option value="Canela de Aço F.S."></option>
+                                <option value="Beira Rio F.C."></option>
+                                <option value="Paranazinho (Sorocaba)"></option>
+                                <option value="Esporte Clube Saboó"></option>
+                                <option value="Unidos F.C."></option>
+                                <option value="Gráfica FM Futebol Clube"></option>
+                                <option value="Inimigos do Fim F.C."></option>
+                                <option value="Granja Selecta F.C."></option>
+                                <option value="São João F.C. (Capela do Alto)"></option>
+                                <option value="Vila São José F.C."></option>
+                            </datalist>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -615,7 +627,7 @@
                         </div>
                         <div class="form-group">
                             <label for="card-opponent-input">Adversário</label>
-                            <input type="text" id="card-opponent-input" placeholder="Ex: São João F.C." required>
+                            <input type="text" id="card-opponent-input" list="opponents-list" placeholder="Ex: Canela de Aço F.S." required>
                         </div>
                     </div>
                     
@@ -684,6 +696,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <!-- Script Principal -->
-    <script src="app.js?v=17"></script>
+    <script src="app.js?v=18"></script>
 </body>
 </html>

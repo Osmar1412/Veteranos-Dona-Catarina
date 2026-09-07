@@ -20,7 +20,7 @@ const defaultMatches = [
         id: 1,
         opponent: "Granja Selecta F.C.",
         date: "16/08/2026",
-        time: "09:30",
+        time: "08:00",
         location: "Campo da Cerim (Nosso Campo)",
         isHome: true,
         played: true,
@@ -31,29 +31,29 @@ const defaultMatches = [
         id: 2,
         opponent: "São João F.C. (Capela do Alto)",
         date: "23/08/2026",
-        time: "10:00",
-        location: "Campo Municipal de São Roque",
+        time: "08:00",
+        location: "Estádio José Guilherme",
         isHome: false,
-        played: false,
-        homeScore: 0,
+        played: true,
+        homeScore: 2,
         awayScore: 0
     },
     {
         id: 3,
         opponent: "Inimigos do Fim F.C.",
         date: "30/08/2026",
-        time: "09:30",
+        time: "08:00",
         location: "Campo da Cerim (Nosso Campo)",
         isHome: true,
-        played: false,
-        homeScore: 0,
+        played: true,
+        homeScore: 2,
         awayScore: 0
     },
     {
         id: 4,
         opponent: "Gráfica FM Futebol Clube",
         date: "06/09/2026",
-        time: "09:30",
+        time: "08:00",
         location: "Campo da Cerim (Nosso Campo)",
         isHome: true,
         played: false,
@@ -62,9 +62,64 @@ const defaultMatches = [
     },
     {
         id: 5,
+        opponent: "Canela de Aço F.S.",
+        date: "13/09/2026",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 6,
+        opponent: "Beira Rio F.C.",
+        date: "20/09/2026",
+        time: "08:00",
+        location: "Campo do Beira Rio",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 7,
+        opponent: "Paranazinho (Sorocaba)",
+        date: "27/09/2026",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 8,
         opponent: "Vila São José F.C.",
         date: "04/10/2026",
-        time: "09:30",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 9,
+        opponent: "Esporte Clube Saboó",
+        date: "11/10/2026",
+        time: "08:00",
+        location: "Campo do Saboó (São Roque)",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 10,
+        opponent: "Unidos F.C.",
+        date: "18/10/2026",
+        time: "08:00",
         location: "Campo da Cerim (Nosso Campo)",
         isHome: true,
         played: false,
@@ -242,6 +297,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const val = snapshot.val();
             if (val) {
                 matches = val;
+                // Assegura que os novos confrontos futuros entrem no banco caso ainda não existam
+                let hasNewMatches = false;
+                defaultMatches.forEach(dm => {
+                    const exists = matches.some(m => m.opponent.toLowerCase().trim() === dm.opponent.toLowerCase().trim() || m.date === dm.date);
+                    if (!exists) {
+                        matches.push(dm);
+                        hasNewMatches = true;
+                    }
+                });
+                if (hasNewMatches) {
+                    db.ref('matches').set(matches);
+                }
             } else {
                 // Banco vazio, popular com dados padrão
                 matches = defaultMatches;
@@ -528,17 +595,10 @@ function renderMatches() {
         const badgeLabel = match.isHome ? 'Casa' : 'Fora';
 
         // Definir se usamos logotipo ou iniciais para o adversário
+        const opponentLogoSrc = getOpponentLogoUrl(match.opponent);
         let opponentLogoHtml = '';
-        if (match.opponent.toLowerCase().includes("granja selecta")) {
-            opponentLogoHtml = `<img src="img/granja_selecta.png" alt="${match.opponent}" class="match-team-logo">`;
-        } else if (match.opponent.toLowerCase().includes("são joão") || match.opponent.toLowerCase().includes("sao joao") || match.opponent.toLowerCase().includes("sjfc")) {
-            opponentLogoHtml = `<img src="img/sao_joao.jpg?v=2" alt="${match.opponent}" class="match-team-logo">`;
-        } else if (match.opponent.toLowerCase().includes("são josé") || match.opponent.toLowerCase().includes("sao jose") || match.opponent.toLowerCase().includes("vsjfc")) {
-            opponentLogoHtml = `<img src="img/sao_jose.jpg?v=2" alt="${match.opponent}" class="match-team-logo">`;
-        } else if (match.opponent.toLowerCase().includes("inimigos do fim") || match.opponent.toLowerCase().includes("inimigos")) {
-            opponentLogoHtml = `<img src="img/inimigos_do_fim.jpg?v=2" alt="${match.opponent}" class="match-team-logo">`;
-        } else if (match.opponent.toLowerCase().includes("gráfica fm") || match.opponent.toLowerCase().includes("grafica fm") || match.opponent.toLowerCase().includes("gráfica") || match.opponent.toLowerCase().includes("grafica")) {
-            opponentLogoHtml = `<img src="img/grafica_fm.jpg?v=2" alt="${match.opponent}" class="match-team-logo">`;
+        if (opponentLogoSrc) {
+            opponentLogoHtml = `<img src="${opponentLogoSrc}" alt="${match.opponent}" class="match-team-logo">`;
         } else {
             opponentLogoHtml = `
                 <div class="match-team-logo" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:1.5rem;font-family:var(--font-heading)">
@@ -616,17 +676,10 @@ function renderHistory() {
         row.className = 'history-match-row';
 
         // Definir se usamos logotipo ou iniciais para o adversário
+        const opponentLogoSrc = getOpponentLogoUrl(match.opponent);
         let opponentLogoHtml = '';
-        if (match.opponent.toLowerCase().includes("granja selecta")) {
-            opponentLogoHtml = `<img src="img/granja_selecta.png" alt="${match.opponent}" class="history-logo-mini">`;
-        } else if (match.opponent.toLowerCase().includes("são joão") || match.opponent.toLowerCase().includes("sao joao") || match.opponent.toLowerCase().includes("sjfc")) {
-            opponentLogoHtml = `<img src="img/sao_joao.jpg?v=2" alt="${match.opponent}" class="history-logo-mini">`;
-        } else if (match.opponent.toLowerCase().includes("são josé") || match.opponent.toLowerCase().includes("sao jose") || match.opponent.toLowerCase().includes("vsjfc")) {
-            opponentLogoHtml = `<img src="img/sao_jose.jpg?v=2" alt="${match.opponent}" class="history-logo-mini">`;
-        } else if (match.opponent.toLowerCase().includes("inimigos do fim") || match.opponent.toLowerCase().includes("inimigos")) {
-            opponentLogoHtml = `<img src="img/inimigos_do_fim.jpg?v=2" alt="${match.opponent}" class="history-logo-mini">`;
-        } else if (match.opponent.toLowerCase().includes("gráfica fm") || match.opponent.toLowerCase().includes("grafica fm") || match.opponent.toLowerCase().includes("gráfica") || match.opponent.toLowerCase().includes("grafica")) {
-            opponentLogoHtml = `<img src="img/grafica_fm.jpg?v=2" alt="${match.opponent}" class="history-logo-mini">`;
+        if (opponentLogoSrc) {
+            opponentLogoHtml = `<img src="${opponentLogoSrc}" alt="${match.opponent}" class="history-logo-mini">`;
         } else {
             opponentLogoHtml = `
                 <div class="history-logo-mini" style="display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--color-red-primary);font-size:0.75rem;font-family:var(--font-heading)">
@@ -1143,16 +1196,9 @@ function renderScoreboard() {
 
     // Ajustar logotipo do adversário dinamicamente
     if (awayLogoEl) {
-        if (lastPlayedMatch.opponent.toLowerCase().includes("granja selecta")) {
-            awayLogoEl.src = "img/granja_selecta.png";
-        } else if (lastPlayedMatch.opponent.toLowerCase().includes("são joão") || lastPlayedMatch.opponent.toLowerCase().includes("sao joao") || lastPlayedMatch.opponent.toLowerCase().includes("sjfc")) {
-            awayLogoEl.src = "img/sao_joao.jpg?v=2";
-        } else if (lastPlayedMatch.opponent.toLowerCase().includes("são josé") || lastPlayedMatch.opponent.toLowerCase().includes("sao jose") || lastPlayedMatch.opponent.toLowerCase().includes("vsjfc")) {
-            awayLogoEl.src = "img/sao_jose.jpg?v=2";
-        } else if (lastPlayedMatch.opponent.toLowerCase().includes("inimigos do fim") || lastPlayedMatch.opponent.toLowerCase().includes("inimigos")) {
-            awayLogoEl.src = "img/inimigos_do_fim.jpg?v=2";
-        } else if (lastPlayedMatch.opponent.toLowerCase().includes("gráfica fm") || lastPlayedMatch.opponent.toLowerCase().includes("grafica fm") || lastPlayedMatch.opponent.toLowerCase().includes("gráfica") || lastPlayedMatch.opponent.toLowerCase().includes("grafica")) {
-            awayLogoEl.src = "img/grafica_fm.jpg?v=2";
+        const opponentLogoSrc = getOpponentLogoUrl(lastPlayedMatch.opponent);
+        if (opponentLogoSrc) {
+            awayLogoEl.src = opponentLogoSrc;
         } else {
             // Gerar um placeholder com as iniciais do adversário novo
             awayLogoEl.src = `https://placehold.co/100x100/4a5568/ffffff?text=${encodeURIComponent(lastPlayedMatch.opponent.substring(0,2).toUpperCase())}`;
@@ -1460,8 +1506,9 @@ function getDayOfWeekAndDateString(dateStr) {
     return dateStr;
 }
 
-// Retorna a URL do brasão do adversário
-function getOpponentLogoUrlForCard(opponentName) {
+// Retorna a URL do brasão do adversário cadastrado
+function getOpponentLogoUrl(opponentName) {
+    if (!opponentName) return "";
     const name = opponentName.toLowerCase();
     if (name.includes("granja selecta")) {
         return "img/granja_selecta.png";
@@ -1473,8 +1520,22 @@ function getOpponentLogoUrlForCard(opponentName) {
         return "img/inimigos_do_fim.jpg?v=2";
     } else if (name.includes("gráfica fm") || name.includes("grafica fm") || name.includes("gráfica") || name.includes("grafica")) {
         return "img/grafica_fm.jpg?v=2";
+    } else if (name.includes("canela de aço") || name.includes("canela de aco") || name.includes("canela")) {
+        return "img/canela_de_aco.jpg";
+    } else if (name.includes("beira rio") || name.includes("beira-rio") || name.includes("beirario")) {
+        return "img/beira_rio.jpg";
+    } else if (name.includes("paranazinho")) {
+        return "img/paranazinho.jpg";
+    } else if (name.includes("saboó") || name.includes("saboo") || name.includes("ecs")) {
+        return "img/saboo.jpg";
+    } else if (name.includes("unidos")) {
+        return "img/unidos_fc.jpg";
     }
     return "";
+}
+
+function getOpponentLogoUrlForCard(opponentName) {
+    return getOpponentLogoUrl(opponentName);
 }
 
 // Desenha retângulos arredondados auxiliares no Canvas
@@ -1787,7 +1848,7 @@ function drawColoredText(ctx, text, x, y, font, defaultColor, highlightColor) {
     ctx.restore();
 }
 
-// Algoritmo de Flood Fill para remover fundo branco de logotipos JPG tornando-os transparentes
+// Algoritmo de Flood Fill aprimorado para remover fundo uniforme (branco, preto ou escuro) tornando-o transparente
 function makeBackgroundTransparent(img) {
     const canvas = document.createElement('canvas');
     canvas.width = img.width;
@@ -1800,8 +1861,36 @@ function makeBackgroundTransparent(img) {
     const w = canvas.width;
     const h = canvas.height;
     
+    // Se o canto já for transparente, não precisa processar
+    if (data[3] === 0) return canvas;
+
+    // Detecta cor média dos cantos para identificar o fundo uniforme
+    const corners = [
+        0, // (0,0)
+        (w - 1) * 4, // (w-1, 0)
+        ((h - 1) * w) * 4, // (0, h-1)
+        ((h - 1) * w + (w - 1)) * 4 // (w-1, h-1)
+    ];
+    
+    let sumR = 0, sumG = 0, sumB = 0;
+    corners.forEach(p => {
+        sumR += data[p];
+        sumG += data[p + 1];
+        sumB += data[p + 2];
+    });
+    const bgR = Math.round(sumR / 4);
+    const bgG = Math.round(sumG / 4);
+    const bgB = Math.round(sumB / 4);
+
     const visited = new Uint8Array(w * h);
     const queue = [];
+    const tolerance = 48; // Tolerância para compressão JPG nos cantos
+
+    function isBackground(r, g, b) {
+        // Verifica distância de cor euclidiana
+        const dist = Math.sqrt((r - bgR)**2 + (g - bgG)**2 + (b - bgB)**2);
+        return dist <= tolerance;
+    }
     
     function enqueue(x, y) {
         if (x < 0 || x >= w || y < 0 || y >= h) return;
@@ -1814,25 +1903,23 @@ function makeBackgroundTransparent(img) {
         const b = data[pixelIdx + 2];
         const a = data[pixelIdx + 3];
         
-        // Remove pixels próximos ao branco
-        if (r > 240 && g > 240 && b > 240 && a > 0) {
+        if (a > 0 && isBackground(r, g, b)) {
             visited[idx] = 1;
             queue.push(idx);
         }
     }
     
-    // Inicia a busca pelos cantos
+    // Inicia a busca pelos cantos e bordas
     enqueue(0, 0);
     enqueue(w - 1, 0);
     enqueue(0, h - 1);
     enqueue(w - 1, h - 1);
     
-    // Inicia a busca pelas bordas gerais
-    for (let x = 0; x < w; x += 10) {
+    for (let x = 0; x < w; x += 5) {
         enqueue(x, 0);
         enqueue(x, h - 1);
     }
-    for (let y = 0; y < h; y += 10) {
+    for (let y = 0; y < h; y += 5) {
         enqueue(0, y);
         enqueue(w - 1, y);
     }
@@ -2131,7 +2218,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowOffsetY = 8;
         
         const nameUpper = config.opponent.toUpperCase();
-        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO');
+        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS');
 
         if (needsCircularClip) {
             // Círculo de fundo branco para oponente
