@@ -125,6 +125,61 @@ const defaultMatches = [
         played: false,
         homeScore: 0,
         awayScore: 0
+    },
+    {
+        id: 11,
+        opponent: "Patrick's Só a Nata",
+        date: "25/10/2026",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 12,
+        opponent: "Clube Atlético Barcelona",
+        date: "01/11/2026",
+        time: "08:00",
+        location: "Campo do Barcelona (Sorocaba)",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 13,
+        opponent: "Família Bem Bolado",
+        date: "08/11/2026",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 14,
+        opponent: "Clube Amigos do Villa Allegro",
+        date: "15/11/2026",
+        time: "08:00",
+        location: "Campo do Villa Allegro (Sorocaba)",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 15,
+        opponent: "Futmax FFCA",
+        date: "22/11/2026",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -1656,6 +1711,16 @@ function getOpponentLogoUrl(opponentName) {
         return "img/saboo.jpg";
     } else if (name.includes("unidos")) {
         return "img/unidos_fc.jpg";
+    } else if (name.includes("patrick") || name.includes("só a nata") || name.includes("so a nata")) {
+        return "img/patricks.jpg";
+    } else if (name.includes("barcelona") || name.includes("cab")) {
+        return "img/atletico_barcelona.jpg";
+    } else if (name.includes("bem bolado") || name.includes("carumbé") || name.includes("carumbe")) {
+        return "img/familia_bem_bolado.jpg";
+    } else if (name.includes("villa allegro") || name.includes("allegro") || name.includes("cava")) {
+        return "img/villa_allegro.jpg";
+    } else if (name.includes("futmax") || name.includes("ffca") || name.includes("aliados")) {
+        return "img/futmax.jpg";
     }
     return "";
 }
@@ -2344,7 +2409,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowOffsetY = 8;
         
         const nameUpper = config.opponent.toUpperCase();
-        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS');
+        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS') || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper.includes('CAVA');
 
         if (needsCircularClip) {
             // Círculo de fundo branco para oponente
