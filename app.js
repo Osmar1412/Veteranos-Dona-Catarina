@@ -276,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initContactForm();
     initAdminForm();
     checkAdminAuthState();
+    initMatchCarousel();
 
     if (useFirebase && db) {
         // Escutar elenco em tempo real
@@ -435,6 +436,10 @@ function initNavigation() {
                 }
             });
 
+            if (targetTab === 'compromissos') {
+                setTimeout(updateMatchCarousel, 50);
+            }
+
             // Rolar suavemente para o topo
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -584,10 +589,8 @@ function renderMatches() {
         return new Date(dateA) - new Date(dateB);
     });
 
-    // Exibir apenas os 3 próximos domingos
-    const nextThreeMatches = sortedMatches.slice(0, 3);
-
-    nextThreeMatches.forEach(match => {
+    // Renderizar todos os confrontos futuros agendados
+    sortedMatches.forEach(match => {
         const card = document.createElement('div');
         card.className = 'match-card';
         
@@ -643,6 +646,129 @@ function renderMatches() {
             </div>
         `;
         matchesGrid.appendChild(card);
+    });
+
+    // Atualizar posição do carrossel mantendo 3 jogos na tela
+    updateMatchCarousel();
+}
+
+let currentMatchCarouselIndex = 0;
+
+function updateMatchCarousel() {
+    const grid = document.getElementById('matches-grid');
+    const prevBtn = document.getElementById('matches-prev-btn');
+    const nextBtn = document.getElementById('matches-next-btn');
+    if (!grid) return;
+
+    const cards = grid.querySelectorAll('.match-card');
+    const totalCards = cards.length;
+    if (totalCards === 0) {
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+        grid.style.transform = 'translateX(0)';
+        return;
+    }
+
+    let visibleCards = 3;
+    if (window.innerWidth <= 680) {
+        visibleCards = 1;
+    } else if (window.innerWidth <= 992) {
+        visibleCards = 2;
+    }
+
+    const maxIndex = Math.max(0, totalCards - visibleCards);
+
+    if (currentMatchCarouselIndex > maxIndex) {
+        currentMatchCarouselIndex = maxIndex;
+    }
+    if (currentMatchCarouselIndex < 0) {
+        currentMatchCarouselIndex = 0;
+    }
+
+    if (totalCards <= visibleCards) {
+        grid.style.transform = 'translateX(0)';
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+        return;
+    }
+
+    if (prevBtn) {
+        prevBtn.style.display = 'flex';
+        prevBtn.disabled = (currentMatchCarouselIndex === 0);
+    }
+    if (nextBtn) {
+        nextBtn.style.display = 'flex';
+        nextBtn.disabled = (currentMatchCarouselIndex >= maxIndex);
+    }
+
+    const firstCard = cards[0];
+    const cardWidth = firstCard.offsetWidth;
+    if (cardWidth > 0) {
+        const computedGap = parseFloat(window.getComputedStyle(grid).gap) || 24;
+        const offset = currentMatchCarouselIndex * (cardWidth + computedGap);
+        grid.style.transform = `translateX(-${offset}px)`;
+    }
+}
+
+function initMatchCarousel() {
+    const prevBtn = document.getElementById('matches-prev-btn');
+    const nextBtn = document.getElementById('matches-next-btn');
+    const viewport = document.getElementById('matches-carousel-viewport');
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentMatchCarouselIndex > 0) {
+                currentMatchCarouselIndex--;
+                updateMatchCarousel();
+            }
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const grid = document.getElementById('matches-grid');
+            if (!grid) return;
+            const cards = grid.querySelectorAll('.match-card');
+            let visibleCards = 3;
+            if (window.innerWidth <= 680) visibleCards = 1;
+            else if (window.innerWidth <= 992) visibleCards = 2;
+            const maxIndex = Math.max(0, cards.length - visibleCards);
+
+            if (currentMatchCarouselIndex < maxIndex) {
+                currentMatchCarouselIndex++;
+                updateMatchCarousel();
+            }
+        });
+    }
+
+    if (viewport) {
+        let touchStartX = 0;
+        let touchEndX = 0;
+        viewport.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        viewport.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchEndX - touchStartX;
+            if (Math.abs(diff) > 40) {
+                if (diff < 0) {
+                    if (nextBtn && !nextBtn.disabled) nextBtn.click();
+                } else {
+                    if (prevBtn && !prevBtn.disabled) prevBtn.click();
+                }
+            }
+        }, { passive: true });
+
+        if (window.ResizeObserver) {
+            new ResizeObserver(() => {
+                updateMatchCarousel();
+            }).observe(viewport);
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        updateMatchCarousel();
     });
 }
 
