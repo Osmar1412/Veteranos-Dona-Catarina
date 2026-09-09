@@ -217,8 +217,15 @@ const defaultMatches = [
 ];
 
 // Inicialização do Estado
+let deletedMatches = JSON.parse(localStorage.getItem('vet_dona_catarina_deleted_matches')) || [];
 let players = JSON.parse(localStorage.getItem('vet_dona_catarina_players')) || defaultPlayers;
-let matches = JSON.parse(localStorage.getItem('vet_dona_catarina_matches')) || defaultMatches;
+let rawMatches = JSON.parse(localStorage.getItem('vet_dona_catarina_matches')) || defaultMatches;
+let matches = rawMatches.filter(m => {
+    if (!m) return false;
+    const sig = `${(m.opponent || '').toLowerCase().trim()}_${m.date || ''}`;
+    const oppSig = (m.opponent || '').toLowerCase().trim();
+    return !deletedMatches.includes(sig) && !deletedMatches.includes(oppSig);
+});
 let isAdminAuthenticated = sessionStorage.getItem('vet_dona_catarina_admin') === 'true';
 let editingPlayerId = null;
 let editingMatchId = null; // Variável de controle para edição de partidas
@@ -381,27 +388,35 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAdminPlayersTable();
         });
 
+        // Escutar partidas deletadas em tempo real
+        db.ref('deleted_matches').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val && Array.isArray(val)) {
+                deletedMatches = val;
+                localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
+            }
+        });
+
         // Escutar partidas em tempo real
         db.ref('matches').on('value', (snapshot) => {
             const val = snapshot.val();
             if (val) {
-                matches = val;
-                // Assegura que os novos confrontos futuros entrem no banco caso ainda não existam
-                let hasNewMatches = false;
-                defaultMatches.forEach(dm => {
-                    const exists = matches.some(m => m.opponent.toLowerCase().trim() === dm.opponent.toLowerCase().trim() || m.date === dm.date);
-                    if (!exists) {
-                        matches.push(dm);
-                        hasNewMatches = true;
-                    }
+                const rawMatches = Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean);
+                // Assegura que nenhum confronto excluído permaneça
+                matches = rawMatches.filter(m => {
+                    if (!m) return false;
+                    const sig = `${(m.opponent || '').toLowerCase().trim()}_${m.date || ''}`;
+                    const oppSig = (m.opponent || '').toLowerCase().trim();
+                    return !deletedMatches.includes(sig) && !deletedMatches.includes(oppSig);
                 });
-                if (hasNewMatches) {
-                    db.ref('matches').set(matches);
-                }
             } else {
-                // Banco vazio, popular com dados padrão
-                matches = defaultMatches;
-                db.ref('matches').set(defaultMatches);
+                // Banco vazio, popular com dados padrão exceto os excluídos
+                matches = defaultMatches.filter(m => {
+                    const sig = `${(m.opponent || '').toLowerCase().trim()}_${m.date || ''}`;
+                    const oppSig = (m.opponent || '').toLowerCase().trim();
+                    return !deletedMatches.includes(sig) && !deletedMatches.includes(oppSig);
+                });
+                db.ref('matches').set(matches);
             }
             renderMatches();
             renderHistory();
@@ -1405,6 +1420,15 @@ function initAdminForm() {
                 showToast("Confronto agendado com sucesso!");
             }
 
+            // Permite reagendar adversários que haviam sido excluídos anteriormente
+            const addSig = `${(opponent || '').toLowerCase().trim()}_${date || ''}`;
+            const addOppSig = (opponent || '').toLowerCase().trim();
+            deletedMatches = deletedMatches.filter(s => s !== addSig && s !== addOppSig);
+            localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
+            if (useFirebase && db) {
+                db.ref('deleted_matches').set(deletedMatches);
+            }
+
             saveMatches();
             renderMatches();
             renderHistory();
@@ -1623,7 +1647,31 @@ async function deleteMatch(id, opponent) {
         if (editingMatchId === id) {
             resetMatchForm();
         }
-        matches = matches.filter(m => m.id !== id);
+
+        // Registrar nas partidas deletadas para evitar restaurações automáticas
+        const matchToDelete = matches.find(m => String(m.id) === String(id)) || matches.find(m => m.opponent === opponent);
+        if (matchToDelete) {
+            const sig = `${(matchToDelete.opponent || '').toLowerCase().trim()}_${matchToDelete.date || ''}`;
+            if (!deletedMatches.includes(sig)) {
+                deletedMatches.push(sig);
+            }
+        }
+        const oppSig = (opponent || '').toLowerCase().trim();
+        if (!deletedMatches.includes(oppSig)) {
+            deletedMatches.push(oppSig);
+        }
+        localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
+        if (useFirebase && db) {
+            db.ref('deleted_matches').set(deletedMatches);
+        }
+
+        matches = matches.filter(m => {
+            if (id !== undefined && id !== null && m.id !== undefined && m.id !== null) {
+                return String(m.id) !== String(id);
+            }
+            return m.opponent !== opponent;
+        });
+
         saveMatches();
         renderMatches();
         renderHistory();
@@ -1756,7 +1804,12 @@ async function deletePlayer(id, name) {
         if (editingPlayerId === id) {
             resetAdminForm();
         }
-        players = players.filter(p => p.id !== id);
+        players = players.filter(p => {
+            if (id !== undefined && id !== null && p.id !== undefined && p.id !== null) {
+                return String(p.id) !== String(id);
+            }
+            return p.name !== name;
+        });
         savePlayers();
         renderSquad('todos');
         renderAdminPlayersTable();
