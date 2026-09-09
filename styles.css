@@ -1683,3 +1683,144 @@ footer {
     }
 }
 
+/* ==========================================================================
+   Modais Padrão do Sistema (Avisos e Confirmações com Brasão)
+   ========================================================================== */
+.system-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3100;
+    padding: 1rem;
+}
+
+.system-modal-backdrop.active {
+    display: flex;
+}
+
+.system-modal-box {
+    background: #0d1310;
+    border: 1.5px solid var(--color-gold);
+    border-radius: var(--border-radius-md);
+    width: 100%;
+    max-width: 440px;
+    padding: 2.2rem 1.8rem 1.8rem;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(241, 196, 15, 0.25);
+    animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.system-modal-crest {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    border: 3px solid var(--color-gold);
+    background: #093b1f;
+    padding: 4px;
+    box-shadow: 0 0 18px rgba(241, 196, 15, 0.4);
+    overflow: hidden;
+    margin: 0 auto 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.system-modal-crest img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.system-modal-title {
+    font-family: var(--font-heading);
+    color: var(--color-gold);
+    font-size: 1.35rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.8rem;
+}
+
+.system-modal-message {
+    color: #f1f5f9;
+    font-size: 0.98rem;
+    line-height: 1.5;
+    margin-bottom: 1.8rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.system-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.system-modal-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.8rem 1.25rem;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    border: none;
+    outline: none;
+}
+
+.system-modal-btn-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #cbd5e1;
+}
+
+.system-modal-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.system-modal-btn-confirm {
+    background: var(--color-red-primary, #dc2626);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+}
+
+.system-modal-btn-confirm:hover {
+    background: #b91c1c;
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+    transform: translateY(-1px);
+}
+
+.system-modal-btn-primary {
+    background: var(--color-green-primary, #1b7843);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(27, 120, 67, 0.4);
+}
+
+.system-modal-btn-primary:hover {
+    background: #145d34;
+    box-shadow: 0 6px 20px rgba(27, 120, 67, 0.6);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+    .system-modal-actions {
+        flex-direction: column-reverse;
+    }
+}
+

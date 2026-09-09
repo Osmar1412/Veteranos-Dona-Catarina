@@ -935,29 +935,118 @@ function renderHistory() {
 }
 
 /* ==========================================================================
-   ALERTAS CUSTOMIZADOS PREMIUM
+   ALERTAS E CONFIRMAÇÕES CUSTOMIZADOS PADRÃO DO SISTEMA
    ========================================================================== */
 
 // Exibe um modal de alerta customizado com o brasão do clube
-function showCustomAlert(message) {
-    const alertModal = document.getElementById('custom-alert-modal');
-    const alertMessage = document.getElementById('custom-alert-message');
-    const alertOkBtn = document.getElementById('btn-custom-alert-ok');
-    
-    if (alertModal && alertMessage && alertOkBtn) {
-        alertMessage.textContent = message;
-        alertModal.classList.add('active');
+function showCustomAlert(message, title = "Aviso") {
+    return new Promise((resolve) => {
+        const alertModal = document.getElementById('custom-alert-modal');
+        const alertMessage = document.getElementById('custom-alert-message');
+        const alertTitle = document.getElementById('custom-alert-title');
+        const alertOkBtn = document.getElementById('btn-custom-alert-ok');
         
-        // Manipulador para fechar o modal
-        const closeAlert = () => {
-            alertModal.classList.remove('active');
-            alertOkBtn.removeEventListener('click', closeAlert);
-        };
-        
-        // Garante que só há um listener ativo por abertura
-        alertOkBtn.removeEventListener('click', closeAlert);
-        alertOkBtn.addEventListener('click', closeAlert);
-    }
+        if (alertModal && alertMessage && alertOkBtn) {
+            if (alertTitle) alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertModal.classList.add('active');
+            
+            const cleanup = () => {
+                alertModal.classList.remove('active');
+                alertOkBtn.removeEventListener('click', onOk);
+                alertModal.removeEventListener('click', onBackdrop);
+                document.removeEventListener('keydown', onKey);
+                resolve();
+            };
+
+            const onOk = (e) => {
+                e.stopPropagation();
+                cleanup();
+            };
+
+            const onBackdrop = (e) => {
+                if (e.target === alertModal) cleanup();
+            };
+
+            const onKey = (e) => {
+                if (e.key === 'Escape' || e.key === 'Enter') cleanup();
+            };
+            
+            alertOkBtn.addEventListener('click', onOk);
+            alertModal.addEventListener('click', onBackdrop);
+            document.addEventListener('keydown', onKey);
+        } else {
+            window.alert(message);
+            resolve();
+        }
+    });
+}
+
+// Exibe um modal de confirmação customizado padrão do sistema com o brasão do clube
+function showCustomConfirm(message, options = {}) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-confirm-modal');
+        const msgEl = document.getElementById('custom-confirm-message');
+        const titleEl = document.getElementById('custom-confirm-title');
+        const okBtn = document.getElementById('btn-custom-confirm-ok');
+        const cancelBtn = document.getElementById('btn-custom-confirm-cancel');
+
+        if (!modal || !msgEl || !okBtn || !cancelBtn) {
+            resolve(window.confirm(message));
+            return;
+        }
+
+        titleEl.textContent = options.title || "Confirmação";
+        msgEl.textContent = message;
+        okBtn.textContent = options.confirmText || "Confirmar";
+        cancelBtn.textContent = options.cancelText || "Cancelar";
+
+        if (options.isDanger !== false) {
+            okBtn.className = "system-modal-btn system-modal-btn-confirm";
+        } else {
+            okBtn.className = "system-modal-btn system-modal-btn-primary";
+        }
+
+        modal.classList.add('active');
+
+        function cleanup(result) {
+            modal.classList.remove('active');
+            okBtn.removeEventListener('click', onOk);
+            cancelBtn.removeEventListener('click', onCancel);
+            modal.removeEventListener('click', onBackdrop);
+            document.removeEventListener('keydown', onKey);
+            resolve(result);
+        }
+
+        function onOk(e) {
+            e.stopPropagation();
+            cleanup(true);
+        }
+
+        function onCancel(e) {
+            e.stopPropagation();
+            cleanup(false);
+        }
+
+        function onBackdrop(e) {
+            if (e.target === modal) {
+                cleanup(false);
+            }
+        }
+
+        function onKey(e) {
+            if (e.key === 'Escape') {
+                cleanup(false);
+            } else if (e.key === 'Enter') {
+                cleanup(true);
+            }
+        }
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        modal.addEventListener('click', onBackdrop);
+        document.addEventListener('keydown', onKey);
+    });
 }
 
 /* ==========================================================================
@@ -1520,8 +1609,17 @@ function resetMatchForm() {
     document.getElementById('match-score-fields').style.display = 'none';
 }
 
-function deleteMatch(id, opponent) {
-    if (confirm(`Tem certeza que deseja remover o confronto contra o "${opponent}"?`)) {
+async function deleteMatch(id, opponent) {
+    const confirmed = await showCustomConfirm(
+        `Tem certeza que deseja remover o confronto contra o "${opponent}"?`,
+        {
+            title: "Remover Confronto",
+            confirmText: "Sim, Remover",
+            cancelText: "Cancelar",
+            isDanger: true
+        }
+    );
+    if (confirmed) {
         if (editingMatchId === id) {
             resetMatchForm();
         }
@@ -1643,8 +1741,17 @@ function resetAdminForm() {
     if (cancelBtn) cancelBtn.style.display = 'none';
 }
 
-function deletePlayer(id, name) {
-    if (confirm(`Deseja realmente remover o jogador "${name}" do elenco?`)) {
+async function deletePlayer(id, name) {
+    const confirmed = await showCustomConfirm(
+        `Deseja realmente remover o jogador "${name}" do elenco?`,
+        {
+            title: "Remover Jogador",
+            confirmText: "Sim, Remover",
+            cancelText: "Cancelar",
+            isDanger: true
+        }
+    );
+    if (confirmed) {
         // Se estivermos editando o jogador excluído, cancela a edição
         if (editingPlayerId === id) {
             resetAdminForm();
