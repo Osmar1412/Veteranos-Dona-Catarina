@@ -180,6 +180,39 @@ const defaultMatches = [
         played: false,
         homeScore: 0,
         awayScore: 0
+    },
+    {
+        id: 16,
+        opponent: "A.A. Ronda F.C.",
+        date: "29/11/2026",
+        time: "08:00",
+        location: "Campo do Ronda F.C.",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 17,
+        opponent: "E.C. Dragões do Eden",
+        date: "06/12/2026",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 18,
+        opponent: "Pantera Negra F.C.",
+        date: "13/12/2026",
+        time: "08:00",
+        location: "Campo do Pantera Negra",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -1721,6 +1754,12 @@ function getOpponentLogoUrl(opponentName) {
         return "img/villa_allegro.jpg";
     } else if (name.includes("futmax") || name.includes("ffca") || name.includes("aliados")) {
         return "img/futmax.jpg";
+    } else if (name.includes("ronda")) {
+        return "img/ronda_fc.jpg";
+    } else if (name.includes("dragões") || name.includes("dragoes") || name.includes("eden")) {
+        return "img/dragoes_do_eden.jpg";
+    } else if (name.includes("pantera")) {
+        return "img/pantera_negra.jpg";
     }
     return "";
 }
@@ -2408,8 +2447,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 8;
         
-        const nameUpper = config.opponent.toUpperCase();
-        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS') || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper.includes('CAVA');
+        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS') || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper.includes('CAVA') || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA');
 
         if (needsCircularClip) {
             // Círculo de fundo branco para oponente
