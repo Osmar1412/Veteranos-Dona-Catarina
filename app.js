@@ -73,11 +73,11 @@ const defaultMatches = [
     },
     {
         id: 6,
-        opponent: "Beira Rio F.C.",
+        opponent: "Jardim Europa F.C.",
         date: "20/09/2026",
-        time: "08:00",
-        location: "Campo do Beira Rio",
-        isHome: false,
+        time: "08:30",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
         played: false,
         homeScore: 0,
         awayScore: 0
@@ -209,6 +209,17 @@ const defaultMatches = [
         date: "13/12/2026",
         time: "08:00",
         location: "Campo do Pantera Negra",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 19,
+        opponent: "Beira Rio F.C.",
+        date: "20/12/2026",
+        time: "08:00",
+        location: "Campo do Beira Rio",
         isHome: false,
         played: false,
         homeScore: 0,
@@ -409,6 +420,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     const oppSig = (m.opponent || '').toLowerCase().trim();
                     return !deletedMatches.includes(sig) && !deletedMatches.includes(oppSig);
                 });
+
+                // Assegura que o confronto contra Jardim Europa F.C. esteja no próximo domingo (20/09/2026) às 08:30h
+                const hasJardim = matches.some(m => m.opponent && m.opponent.toLowerCase().includes('jardim europa') && m.date === '20/09/2026');
+                if (!hasJardim) {
+                    const idx20 = matches.findIndex(m => m.date === '20/09/2026');
+                    const jardimMatch = {
+                        id: 6,
+                        opponent: "Jardim Europa F.C.",
+                        date: "20/09/2026",
+                        time: "08:30",
+                        location: "Campo da Cerim (Nosso Campo)",
+                        isHome: true,
+                        played: false,
+                        homeScore: 0,
+                        awayScore: 0
+                    };
+                    if (idx20 !== -1) {
+                        const oldMatch = matches[idx20];
+                        if (oldMatch.opponent && !oldMatch.opponent.toLowerCase().includes('jardim europa')) {
+                            oldMatch.date = "20/12/2026";
+                            matches.push(oldMatch);
+                        }
+                        matches[idx20] = jardimMatch;
+                    } else {
+                        matches.push(jardimMatch);
+                    }
+                    saveMatches();
+                }
             } else {
                 // Banco vazio, popular com dados padrão exceto os excluídos
                 matches = defaultMatches.filter(m => {
@@ -1920,6 +1959,8 @@ function getOpponentLogoUrl(opponentName) {
         return "img/dragoes_do_eden.jpg";
     } else if (name.includes("pantera")) {
         return "img/pantera_negra.jpg";
+    } else if (name.includes("jardim europa") || name.includes("europa")) {
+        return "img/jardim_europa.jpg";
     }
     return "";
 }
@@ -2607,7 +2648,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 8;
         
-        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS') || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper.includes('CAVA') || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA');
+        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS') || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper.includes('CAVA') || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA') || nameUpper.includes('JARDIM EUROPA') || nameUpper.includes('EUROPA');
 
         if (needsCircularClip) {
             // Círculo de fundo branco para oponente
