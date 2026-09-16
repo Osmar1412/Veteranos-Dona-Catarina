@@ -2648,6 +2648,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 8;
         
+        const nameUpper = (config.opponent || '').toUpperCase();
         const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS') || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper.includes('CAVA') || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA') || nameUpper.includes('JARDIM EUROPA') || nameUpper.includes('EUROPA');
 
         if (needsCircularClip) {
