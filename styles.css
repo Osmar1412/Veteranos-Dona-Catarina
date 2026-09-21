@@ -1824,3 +1824,56 @@ footer {
     }
 }
 
+/* ==========================================================================
+   Estilos de Confronto Cancelado (Tarjas e Badges)
+   ========================================================================== */
+.history-match-row.match-cancelled {
+    border-left: 4px solid #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.history-score-capsule.cancelled {
+    background: rgba(220, 38, 38, 0.18);
+    border: 1px solid rgba(220, 38, 38, 0.45);
+    color: #f87171;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 0.35rem 0.95rem;
+    text-transform: uppercase;
+    box-shadow: 0 0 12px rgba(220, 38, 38, 0.25);
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-cancel-badge {
+    display: inline-block;
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 0.15rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-left: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-status-cancelled {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+

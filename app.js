@@ -712,8 +712,8 @@ function renderMatches() {
 
     matchesGrid.innerHTML = '';
 
-    // Filtrar apenas jogos NÃO realizados (played === false)
-    const upcomingMatches = matches.filter(m => !m.played);
+    // Filtrar apenas jogos NÃO realizados e NÃO cancelados (jogos agendados futuros)
+    const upcomingMatches = matches.filter(m => !m.played && m.status !== 'cancelado' && !m.cancelled);
 
     if (upcomingMatches.length === 0) {
         matchesGrid.innerHTML = `
@@ -920,10 +920,10 @@ function renderHistory() {
 
     historyGrid.innerHTML = '';
 
-    // Filtrar apenas jogos realizados (played === true)
-    const playedMatches = matches.filter(m => m.played);
+    // Filtrar jogos realizados ou cancelados (concluídos/finalizados)
+    const historyMatches = matches.filter(m => m.played || m.status === 'cancelado' || m.cancelled);
 
-    if (playedMatches.length === 0) {
+    if (historyMatches.length === 0) {
         historyGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #a0aec0; background: var(--color-neutral-card); border-radius: var(--border-radius-sm); border: 1px solid var(--color-glass-border)">
                 <p>Nenhum resultado registrado este ano.</p>
@@ -933,15 +933,16 @@ function renderHistory() {
     }
 
     // Ordenar jogos por data decrescente (mais recente primeiro)
-    const sortedPlayed = [...playedMatches].sort((a, b) => {
+    const sortedHistory = [...historyMatches].sort((a, b) => {
         const dateA = a.date.split('/').reverse().join('-');
         const dateB = b.date.split('/').reverse().join('-');
         return new Date(dateB) - new Date(dateA);
     });
 
-    sortedPlayed.forEach(match => {
+    sortedHistory.forEach(match => {
+        const isCancelled = match.status === 'cancelado' || match.cancelled;
         const row = document.createElement('div');
-        row.className = 'history-match-row';
+        row.className = `history-match-row ${isCancelled ? 'match-cancelled' : ''}`;
 
         // Definir se usamos logotipo ou iniciais para o adversário
         const opponentLogoSrc = getOpponentLogoUrl(match.opponent);
@@ -956,13 +957,34 @@ function renderHistory() {
             `;
         }
 
-        // Definir destaque visual do placar
-        let homeClass = '';
-        let awayClass = '';
-        if (match.homeScore > match.awayScore) {
-            homeClass = 'win';
-        } else if (match.homeScore < match.awayScore) {
-            awayClass = 'loss';
+        let scoreOrStatusHtml = '';
+        if (isCancelled) {
+            scoreOrStatusHtml = `
+                <div class="history-score-capsule cancelled" title="Jogo Cancelado">
+                    <span>CANCELADO</span>
+                </div>
+            `;
+        } else {
+            let homeClass = '';
+            let awayClass = '';
+            if (match.homeScore > match.awayScore) {
+                homeClass = 'win';
+            } else if (match.homeScore < match.awayScore) {
+                awayClass = 'loss';
+            }
+            scoreOrStatusHtml = `
+                <div class="history-score-capsule">
+                    <span class="${homeClass}">${match.homeScore}</span>
+                    <span>-</span>
+                    <span class="${awayClass}">${match.awayScore}</span>
+                </div>
+            `;
+        }
+
+        let detailsHtml = match.location;
+        if (isCancelled) {
+            const noteText = match.cancelNote ? ` (${match.cancelNote})` : '';
+            detailsHtml = `${match.location} <span class="history-cancel-badge">Jogo Cancelado${noteText}</span>`;
         }
 
         row.innerHTML = `
@@ -972,17 +994,13 @@ function renderHistory() {
                     <span class="history-name">Dona Catarina</span>
                     <img src="img/brasao.jpg?v=2" alt="Dona Catarina" class="history-logo-mini" onerror="this.src='https://placehold.co/50x50/093b1f/ffffff?text=DC'">
                 </div>
-                <div class="history-score-capsule">
-                    <span class="${homeClass}">${match.homeScore}</span>
-                    <span>-</span>
-                    <span class="${awayClass}">${match.awayScore}</span>
-                </div>
+                ${scoreOrStatusHtml}
                 <div class="history-team-side away">
                     ${opponentLogoHtml}
                     <span class="history-name">${match.opponent}</span>
                 </div>
             </div>
-            <div class="history-details-text">${match.location}</div>
+            <div class="history-details-text">${detailsHtml}</div>
         `;
         historyGrid.appendChild(row);
     });
@@ -1400,16 +1418,15 @@ function initAdminForm() {
         });
     }
 
-     // Toggle de exibição dos campos de placar conforme o status
+     // Toggle de exibição dos campos de placar ou cancelamento conforme o status
     const matchStatusSelect = document.getElementById('match-status-select');
     const matchScoreFields = document.getElementById('match-score-fields');
-    if (matchStatusSelect && matchScoreFields) {
+    const matchCancelFields = document.getElementById('match-cancel-fields');
+    if (matchStatusSelect) {
         matchStatusSelect.addEventListener('change', () => {
-            if (matchStatusSelect.value === 'jogado') {
-                matchScoreFields.style.display = 'block';
-            } else {
-                matchScoreFields.style.display = 'none';
-            }
+            const val = matchStatusSelect.value;
+            if (matchScoreFields) matchScoreFields.style.display = val === 'jogado' ? 'block' : 'none';
+            if (matchCancelFields) matchCancelFields.style.display = val === 'cancelado' ? 'block' : 'none';
         });
     }
 
@@ -1424,9 +1441,12 @@ function initAdminForm() {
             const time = document.getElementById('match-time-input').value;
             const location = document.getElementById('match-location-input').value;
             const isHome = document.getElementById('match-mando-select').value === 'casa';
-            const played = document.getElementById('match-status-select').value === 'jogado';
+            const statusVal = document.getElementById('match-status-select').value;
+            const isCancelled = statusVal === 'cancelado';
+            const played = statusVal === 'jogado';
             const homeScore = played ? parseInt(document.getElementById('match-home-score').value) || 0 : 0;
             const awayScore = played ? parseInt(document.getElementById('match-away-score').value) || 0 : 0;
+            const cancelNote = isCancelled ? (document.getElementById('match-cancel-note')?.value.trim() || '') : '';
 
             if (editingMatchId) {
                 // Editar jogo existente
@@ -1437,7 +1457,10 @@ function initAdminForm() {
                     matches[matchIndex].time = time;
                     matches[matchIndex].location = location;
                     matches[matchIndex].isHome = isHome;
+                    matches[matchIndex].status = statusVal;
                     matches[matchIndex].played = played;
+                    matches[matchIndex].cancelled = isCancelled;
+                    matches[matchIndex].cancelNote = cancelNote;
                     matches[matchIndex].homeScore = homeScore;
                     matches[matchIndex].awayScore = awayScore;
                     showToast("Confronto atualizado com sucesso!");
@@ -1451,7 +1474,10 @@ function initAdminForm() {
                     time,
                     location,
                     isHome,
+                    status: statusVal,
                     played,
+                    cancelled: isCancelled,
+                    cancelNote,
                     homeScore,
                     awayScore
                 };
@@ -1532,8 +1558,8 @@ function renderScoreboard() {
     const dateEl = document.getElementById('scoreboard-date');
     const locationEl = document.getElementById('scoreboard-location');
 
-    // Buscar o jogo realizado mais recente
-    const playedMatches = matches.filter(m => m.played);
+    // Buscar o jogo realizado mais recente (não cancelado)
+    const playedMatches = matches.filter(m => m.played && m.status !== 'cancelado' && !m.cancelled);
     
     if (playedMatches.length === 0) {
         // Se não houver jogos realizados, ocultar o placar da home
@@ -1588,9 +1614,15 @@ function renderAdminMatchesTable() {
     sorted.forEach(match => {
         const row = document.createElement('tr');
         
-        const statusLabel = match.played 
-            ? `<span style="color: var(--color-green-light); font-weight: bold;">Jogado (${match.homeScore} x ${match.awayScore})</span>` 
-            : '<span style="color: #cbd5e0; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Agendado</span>';
+        let statusLabel = '';
+        if (match.status === 'cancelado' || match.cancelled) {
+            const noteSuffix = match.cancelNote ? ` (${match.cancelNote})` : '';
+            statusLabel = `<span class="badge-status-cancelled">Cancelado${noteSuffix}</span>`;
+        } else if (match.played) {
+            statusLabel = `<span style="color: var(--color-green-light); font-weight: bold;">Jogado (${match.homeScore} x ${match.awayScore})</span>`;
+        } else {
+            statusLabel = '<span style="color: #cbd5e0; background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Agendado</span>';
+        }
         const mandoLabel = match.isHome ? 'Casa' : 'Fora';
 
         row.innerHTML = `
@@ -1642,18 +1674,35 @@ function startEditMatch(id) {
     document.getElementById('match-time-input').value = match.time;
     document.getElementById('match-location-input').value = match.location;
     document.getElementById('match-mando-select').value = match.isHome ? 'casa' : 'fora';
-    document.getElementById('match-status-select').value = match.played ? 'jogado' : 'agendado';
+    
+    let currentStatus = 'agendado';
+    if (match.status === 'cancelado' || match.cancelled) {
+        currentStatus = 'cancelado';
+    } else if (match.played) {
+        currentStatus = 'jogado';
+    }
+    document.getElementById('match-status-select').value = currentStatus;
 
-    // Mostrar/ocultar campos de placar
+    // Mostrar/ocultar campos de placar e cancelamento
     const matchScoreFields = document.getElementById('match-score-fields');
-    if (match.played) {
-        matchScoreFields.style.display = 'block';
-        document.getElementById('match-home-score').value = match.homeScore;
-        document.getElementById('match-away-score').value = match.awayScore;
+    const matchCancelFields = document.getElementById('match-cancel-fields');
+    if (currentStatus === 'jogado') {
+        if (matchScoreFields) matchScoreFields.style.display = 'block';
+        if (matchCancelFields) matchCancelFields.style.display = 'none';
+        document.getElementById('match-home-score').value = match.homeScore || 0;
+        document.getElementById('match-away-score').value = match.awayScore || 0;
+    } else if (currentStatus === 'cancelado') {
+        if (matchScoreFields) matchScoreFields.style.display = 'none';
+        if (matchCancelFields) matchCancelFields.style.display = 'block';
+        const cancelInput = document.getElementById('match-cancel-note');
+        if (cancelInput) cancelInput.value = match.cancelNote || '';
     } else {
-        matchScoreFields.style.display = 'none';
+        if (matchScoreFields) matchScoreFields.style.display = 'none';
+        if (matchCancelFields) matchCancelFields.style.display = 'none';
         document.getElementById('match-home-score').value = 0;
         document.getElementById('match-away-score').value = 0;
+        const cancelInput = document.getElementById('match-cancel-note');
+        if (cancelInput) cancelInput.value = '';
     }
 
     // Rolagem suave até o formulário
@@ -1669,7 +1718,10 @@ function resetMatchForm() {
     document.getElementById('cancel-match-edit-btn').style.display = "none";
 
     document.getElementById('add-match-form').reset();
-    document.getElementById('match-score-fields').style.display = 'none';
+    const matchScoreFields = document.getElementById('match-score-fields');
+    if (matchScoreFields) matchScoreFields.style.display = 'none';
+    const matchCancelFields = document.getElementById('match-cancel-fields');
+    if (matchCancelFields) matchCancelFields.style.display = 'none';
 }
 
 async function deleteMatch(id, opponent) {
@@ -2699,11 +2751,14 @@ async function generateMatchCardUrl(config) {
     // 9. Desenha o "X" com efeito de pinceladas no centro (Brush X de pincel seco)
     drawBrushX(ctx, 300, yLogos, 70);
 
-    // 10. Título da Partida ("AMISTOSO" em destaque com traço horizontal verde e estêncil grunge)
-    drawGrungeText(ctx, config.type.toUpperCase(), 300, 35, 'italic bold 76px Impact, Arial Black, sans-serif', '#ffffff', '#111613', 8);
+    // 10. Título da Partida ("AMISTOSO", "CANCELADO", etc. com traço horizontal e estêncil grunge)
+    const isCardCancelled = config.type.toUpperCase().includes('CANCELAD');
+    const titleColor = isCardCancelled ? '#ef4444' : '#ffffff';
+    const lineColor = isCardCancelled ? '#dc2626' : '#1b7843';
+    drawGrungeText(ctx, config.type.toUpperCase(), 300, 35, isCardCancelled ? 'italic bold 64px Impact, Arial Black, sans-serif' : 'italic bold 76px Impact, Arial Black, sans-serif', titleColor, '#111613', 8);
 
-    // Linha verde texturizada abaixo do título
-    ctx.fillStyle = '#1b7843';
+    // Linha horizontal abaixo do título
+    ctx.fillStyle = lineColor;
     ctx.fillRect(100, 122, 400, 4);
 
     // Fonte de Alta Legibilidade e Contraste para os dados (Sem Itálico comprimido)
@@ -2816,9 +2871,18 @@ function openCardGenerator(match) {
         if (departureTimeInput) departureTimeInput.value = subtractOneHour(match.time);
     }
     
-    // Tenta adivinhar se é amistoso ou campeonato com base no adversário ou histórico
+    // Tenta adivinhar se é amistoso, campeonato ou cancelado com base no status do jogo
     const typeSelect = document.getElementById('card-type-input');
-    typeSelect.value = "AMISTOSO"; // Default
+    if (match.status === 'cancelado' || match.cancelled) {
+        typeSelect.value = "CANCELADO";
+        if (match.cancelNote) {
+            document.getElementById('card-footer-input').value = `CANCELADO: ${match.cancelNote.toUpperCase()}`;
+        } else {
+            document.getElementById('card-footer-input').value = "JOGO CANCELADO - COMUNICADO OFICIAL";
+        }
+    } else {
+        typeSelect.value = "AMISTOSO"; // Default
+    }
     
     // Exibe o modal
     const modal = document.getElementById('card-generator-modal');

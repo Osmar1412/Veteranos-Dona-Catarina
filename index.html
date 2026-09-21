@@ -9,7 +9,7 @@
     <meta name="author" content="E.C. Vet. Dona Catarina">
     
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="styles.css?v=14">
+    <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
 
@@ -517,6 +517,7 @@
                                 <select id="match-status-select" class="form-control" required>
                                     <option value="agendado">Agendado (Próximo Jogo)</option>
                                     <option value="jogado">Jogado (Placar/Histórico)</option>
+                                    <option value="cancelado">Cancelado (Jogo Cancelado)</option>
                                 </select>
                             </div>
                         </div>
@@ -533,6 +534,15 @@
                                     <label for="match-away-score">Gols Adversário</label>
                                     <input type="number" id="match-away-score" class="form-control" min="0" value="0">
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo de Observação de Cancelamento (aparece apenas se 'cancelado' estiver ativo) -->
+                        <div id="match-cancel-fields" style="display: none; border: 1px dashed rgba(239, 68, 68, 0.35); padding: 1rem; border-radius: var(--border-radius-sm); margin-bottom: 1rem; background: rgba(239, 68, 68, 0.05)">
+                            <h4 style="font-size: 0.9rem; margin-bottom: 0.6rem; font-family: var(--font-heading); color: #f87171">Observação do Cancelamento</h4>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="match-cancel-note">Motivo / Observação (Opcional)</label>
+                                <input type="text" id="match-cancel-note" class="form-control" placeholder="Ex: Chuva forte, Solicitação do adversário, etc.">
                             </div>
                         </div>
 
@@ -647,6 +657,7 @@
                                 <option value="CAMPEONATO">Campeonato</option>
                                 <option value="TREINO">Treino</option>
                                 <option value="FESTIVAL">Festival</option>
+                                <option value="CANCELADO">Jogo Cancelado</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -733,6 +744,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <!-- Script Principal -->
-    <script src="app.js?v=25"></script>
+    <script src="app.js?v=26"></script>
 </body>
 </html>
