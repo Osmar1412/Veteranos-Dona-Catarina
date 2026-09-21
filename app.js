@@ -982,9 +982,8 @@ function renderHistory() {
         }
 
         let detailsHtml = match.location;
-        if (isCancelled) {
-            const noteText = match.cancelNote ? ` (${match.cancelNote})` : '';
-            detailsHtml = `${match.location} <span class="history-cancel-badge">Jogo Cancelado${noteText}</span>`;
+        if (isCancelled && match.cancelNote) {
+            detailsHtml = `${match.location} <span class="history-cancel-badge">${match.cancelNote}</span>`;
         }
 
         row.innerHTML = `
