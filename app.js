@@ -194,11 +194,11 @@ const defaultMatches = [
     },
     {
         id: 17,
-        opponent: "E.C. Dragões do Eden",
+        opponent: "Atlético Extra F.C.",
         date: "06/12/2026",
         time: "08:00",
-        location: "Campo da Cerim (Nosso Campo)",
-        isHome: true,
+        location: "Campo do Atlético Extra (Fora)",
+        isHome: false,
         played: false,
         homeScore: 0,
         awayScore: 0
@@ -221,6 +221,28 @@ const defaultMatches = [
         time: "08:00",
         location: "Campo do Beira Rio",
         isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 20,
+        opponent: "E.C. Dragões do Eden",
+        date: "27/12/2026",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
+    },
+    {
+        id: 21,
+        opponent: "Atlético Extra F.C.",
+        date: "24/01/2027",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
         played: false,
         homeScore: 0,
         awayScore: 0
@@ -260,6 +282,70 @@ function getCoachData() {
     return data;
 }
 
+// Assegura que confrontos obrigatórios da agenda estejam presentes
+function ensureRequiredMatches() {
+    let changed = false;
+
+    // Remove do array de excluídos caso tenha entrado por engano
+    deletedMatches = deletedMatches.filter(s => !s.includes('extra'));
+    localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
+
+    // 1. Confronto 06/12/2026 - Fora de casa contra Atlético Extra F.C.
+    const hasExtraDec = matches.some(m => m.opponent && m.opponent.toLowerCase().includes('extra') && m.date === '06/12/2026');
+    if (!hasExtraDec) {
+        const idx06 = matches.findIndex(m => m.date === '06/12/2026');
+        const extraMatchDec = {
+            id: 17,
+            opponent: "Atlético Extra F.C.",
+            date: "06/12/2026",
+            time: "08:00",
+            location: "Campo do Atlético Extra (Fora)",
+            isHome: false,
+            played: false,
+            homeScore: 0,
+            awayScore: 0
+        };
+        if (idx06 !== -1) {
+            const oldMatch = matches[idx06];
+            if (oldMatch.opponent && !oldMatch.opponent.toLowerCase().includes('extra')) {
+                oldMatch.date = "27/12/2026";
+                matches.push(oldMatch);
+            }
+            matches[idx06] = extraMatchDec;
+        } else {
+            matches.push(extraMatchDec);
+        }
+        changed = true;
+    }
+
+    // 2. Confronto 24/01/2027 - Em nosso campo contra Atlético Extra F.C.
+    const hasExtraJan = matches.some(m => m.opponent && m.opponent.toLowerCase().includes('extra') && m.date === '24/01/2027');
+    if (!hasExtraJan) {
+        const idx24 = matches.findIndex(m => m.date === '24/01/2027');
+        const extraMatchJan = {
+            id: 21,
+            opponent: "Atlético Extra F.C.",
+            date: "24/01/2027",
+            time: "08:00",
+            location: "Campo da Cerim (Nosso Campo)",
+            isHome: true,
+            played: false,
+            homeScore: 0,
+            awayScore: 0
+        };
+        if (idx24 !== -1) {
+            matches[idx24] = extraMatchJan;
+        } else {
+            matches.push(extraMatchJan);
+        }
+        changed = true;
+    }
+
+    if (changed) {
+        saveMatches();
+    }
+}
+
 // Migração de dados legados do LocalStorage (garante compatibilidade)
 let needsSave = false;
 matches = matches.map(match => {
@@ -281,6 +367,7 @@ matches = matches.map(match => {
 if (needsSave) {
     localStorage.setItem('vet_dona_catarina_matches', JSON.stringify(matches));
 }
+ensureRequiredMatches();
 
 // ==========================================================================
 // CONFIGURAÇÃO DO FIREBASE (NUVEM)
@@ -457,6 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 db.ref('matches').set(matches);
             }
+            ensureRequiredMatches();
             renderMatches();
             renderHistory();
             renderScoreboard();
@@ -2012,6 +2100,8 @@ function getOpponentLogoUrl(opponentName) {
         return "img/pantera_negra.jpg";
     } else if (name.includes("jardim europa") || name.includes("europa")) {
         return "img/jardim_europa.jpg";
+    } else if (name.includes("atlético extra") || name.includes("atletico extra") || name.includes("extra")) {
+        return "img/atletico_extra.jpg";
     }
     return "";
 }
