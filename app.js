@@ -117,9 +117,9 @@ const defaultMatches = [
     },
     {
         id: 10,
-        opponent: "Unidos F.C.",
+        opponent: "Papaléguas City",
         date: "18/10/2026",
-        time: "08:00",
+        time: "08:30",
         location: "Campo da Cerim (Nosso Campo)",
         isHome: true,
         played: false,
@@ -246,6 +246,17 @@ const defaultMatches = [
         played: false,
         homeScore: 0,
         awayScore: 0
+    },
+    {
+        id: 22,
+        opponent: "Unidos F.C.",
+        date: "31/01/2027",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -287,10 +298,38 @@ function ensureRequiredMatches() {
     let changed = false;
 
     // Remove do array de excluídos caso tenha entrado por engano
-    deletedMatches = deletedMatches.filter(s => !s.includes('extra'));
+    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas'));
     localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
 
-    // 1. Confronto 06/12/2026 - Fora de casa contra Atlético Extra F.C.
+    // 1. Confronto 18/10/2026 às 08:30h - Em nosso campo contra Papaléguas City
+    const hasPapaleguas = matches.some(m => m.opponent && (m.opponent.toLowerCase().includes('papaléguas') || m.opponent.toLowerCase().includes('papaleguas')) && m.date === '18/10/2026');
+    if (!hasPapaleguas) {
+        const idx18 = matches.findIndex(m => m.date === '18/10/2026');
+        const papaleguasMatch = {
+            id: 10,
+            opponent: "Papaléguas City",
+            date: "18/10/2026",
+            time: "08:30",
+            location: "Campo da Cerim (Nosso Campo)",
+            isHome: true,
+            played: false,
+            homeScore: 0,
+            awayScore: 0
+        };
+        if (idx18 !== -1) {
+            const oldMatch = matches[idx18];
+            if (oldMatch.opponent && !oldMatch.opponent.toLowerCase().includes('papaleguas') && !oldMatch.opponent.toLowerCase().includes('papaléguas')) {
+                oldMatch.date = "31/01/2027";
+                matches.push(oldMatch);
+            }
+            matches[idx18] = papaleguasMatch;
+        } else {
+            matches.push(papaleguasMatch);
+        }
+        changed = true;
+    }
+
+    // 2. Confronto 06/12/2026 - Fora de casa contra Atlético Extra F.C.
     const hasExtraDec = matches.some(m => m.opponent && m.opponent.toLowerCase().includes('extra') && m.date === '06/12/2026');
     if (!hasExtraDec) {
         const idx06 = matches.findIndex(m => m.date === '06/12/2026');
@@ -2102,6 +2141,8 @@ function getOpponentLogoUrl(opponentName) {
         return "img/jardim_europa.jpg";
     } else if (name.includes("atlético extra") || name.includes("atletico extra") || name.includes("extra")) {
         return "img/atletico_extra.jpg";
+    } else if (name.includes("papaléguas") || name.includes("papaleguas") || name.includes("city")) {
+        return "img/papaleguas_city.jpg";
     }
     return "";
 }
