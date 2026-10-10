@@ -106,11 +106,11 @@ const defaultMatches = [
     },
     {
         id: 9,
-        opponent: "Esporte Clube Saboó",
+        opponent: "Irmãos Metralhas F.C.",
         date: "11/10/2026",
-        time: "08:00",
-        location: "Campo do Saboó (São Roque)",
-        isHome: false,
+        time: "08:30",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
         played: false,
         homeScore: 0,
         awayScore: 0
@@ -257,6 +257,17 @@ const defaultMatches = [
         played: false,
         homeScore: 0,
         awayScore: 0
+    },
+    {
+        id: 23,
+        opponent: "Esporte Clube Saboó",
+        date: "07/02/2027",
+        time: "08:00",
+        location: "Campo do Saboó (São Roque)",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -298,8 +309,36 @@ function ensureRequiredMatches() {
     let changed = false;
 
     // Remove do array de excluídos caso tenha entrado por engano
-    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas'));
+    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas') && !s.includes('metralhas') && !s.includes('metralha') && !s.includes('irmaos') && !s.includes('irmãos'));
     localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
+
+    // 0. Confronto 11/10/2026 às 08:30h - Em nosso campo contra Irmãos Metralhas F.C.
+    const hasMetralhas = matches.some(m => m.opponent && (m.opponent.toLowerCase().includes('metralhas') || m.opponent.toLowerCase().includes('metralha') || m.opponent.toLowerCase().includes('irmãos') || m.opponent.toLowerCase().includes('irmaos')) && m.date === '11/10/2026');
+    if (!hasMetralhas) {
+        const idx11 = matches.findIndex(m => m.date === '11/10/2026');
+        const metralhasMatch = {
+            id: 9,
+            opponent: "Irmãos Metralhas F.C.",
+            date: "11/10/2026",
+            time: "08:30",
+            location: "Campo da Cerim (Nosso Campo)",
+            isHome: true,
+            played: false,
+            homeScore: 0,
+            awayScore: 0
+        };
+        if (idx11 !== -1) {
+            const oldMatch = matches[idx11];
+            if (oldMatch.opponent && !oldMatch.opponent.toLowerCase().includes('metralha') && !oldMatch.opponent.toLowerCase().includes('irmaos') && !oldMatch.opponent.toLowerCase().includes('irmãos')) {
+                oldMatch.date = "07/02/2027";
+                matches.push(oldMatch);
+            }
+            matches[idx11] = metralhasMatch;
+        } else {
+            matches.push(metralhasMatch);
+        }
+        changed = true;
+    }
 
     // 1. Confronto 18/10/2026 às 08:30h - Em nosso campo contra Papaléguas City
     const hasPapaleguas = matches.some(m => m.opponent && (m.opponent.toLowerCase().includes('papaléguas') || m.opponent.toLowerCase().includes('papaleguas')) && m.date === '18/10/2026');
@@ -2143,6 +2182,8 @@ function getOpponentLogoUrl(opponentName) {
         return "img/atletico_extra.jpg";
     } else if (name.includes("papaléguas") || name.includes("papaleguas") || name.includes("city")) {
         return "img/papaleguas_city.jpg";
+    } else if (name.includes("metralhas") || name.includes("metralha") || name.includes("irmãos") || name.includes("irmaos")) {
+        return "img/irmaos_metralhas.jpg";
     }
     return "";
 }
