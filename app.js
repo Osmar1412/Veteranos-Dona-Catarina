@@ -161,11 +161,11 @@ const defaultMatches = [
     },
     {
         id: 14,
-        opponent: "Clube Amigos do Villa Allegro",
+        opponent: "Real Madri Sorocabano",
         date: "15/11/2026",
-        time: "08:00",
-        location: "Campo do Villa Allegro (Sorocaba)",
-        isHome: false,
+        time: "08:30",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
         played: false,
         homeScore: 0,
         awayScore: 0
@@ -268,6 +268,17 @@ const defaultMatches = [
         played: false,
         homeScore: 0,
         awayScore: 0
+    },
+    {
+        id: 24,
+        opponent: "Clube Amigos do Villa Allegro",
+        date: "14/02/2027",
+        time: "08:00",
+        location: "Campo do Villa Allegro (Sorocaba)",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -309,7 +320,7 @@ function ensureRequiredMatches() {
     let changed = false;
 
     // Remove do array de excluídos caso tenha entrado por engano
-    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas') && !s.includes('metralhas') && !s.includes('metralha') && !s.includes('irmaos') && !s.includes('irmãos'));
+    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas') && !s.includes('metralhas') && !s.includes('metralha') && !s.includes('irmaos') && !s.includes('irmãos') && !s.includes('real madri') && !s.includes('madri') && !s.includes('sorocabano'));
     localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
 
     // 0. Confronto 11/10/2026 às 08:30h - Em nosso campo contra Irmãos Metralhas F.C.
@@ -364,6 +375,34 @@ function ensureRequiredMatches() {
             matches[idx18] = papaleguasMatch;
         } else {
             matches.push(papaleguasMatch);
+        }
+        changed = true;
+    }
+
+    // 1.5 Confronto 15/11/2026 às 08:30h - Em nosso campo contra Real Madri Sorocabano
+    const hasRealMadri = matches.some(m => m.opponent && (m.opponent.toLowerCase().includes('real madri') || m.opponent.toLowerCase().includes('madri')) && m.date === '15/11/2026');
+    if (!hasRealMadri) {
+        const idx15 = matches.findIndex(m => m.date === '15/11/2026');
+        const realMadriMatch = {
+            id: 14,
+            opponent: "Real Madri Sorocabano",
+            date: "15/11/2026",
+            time: "08:30",
+            location: "Campo da Cerim (Nosso Campo)",
+            isHome: true,
+            played: false,
+            homeScore: 0,
+            awayScore: 0
+        };
+        if (idx15 !== -1) {
+            const oldMatch = matches[idx15];
+            if (oldMatch.opponent && !oldMatch.opponent.toLowerCase().includes('real madri') && !oldMatch.opponent.toLowerCase().includes('madri')) {
+                oldMatch.date = "14/02/2027";
+                matches.push(oldMatch);
+            }
+            matches[idx15] = realMadriMatch;
+        } else {
+            matches.push(realMadriMatch);
         }
         changed = true;
     }
@@ -2184,6 +2223,8 @@ function getOpponentLogoUrl(opponentName) {
         return "img/papaleguas_city.jpg";
     } else if (name.includes("metralhas") || name.includes("metralha") || name.includes("irmãos") || name.includes("irmaos")) {
         return "img/irmaos_metralhas.jpg";
+    } else if (name.includes("real madri") || name.includes("madri") || name.includes("sorocabano")) {
+        return "img/real_madri_sorocabano.jpg";
     }
     return "";
 }
