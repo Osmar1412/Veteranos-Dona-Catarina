@@ -2195,17 +2195,17 @@ function getOpponentLogoUrl(opponentName) {
         return "img/beira_rio.jpg";
     } else if (name.includes("paranazinho")) {
         return "img/paranazinho.jpg";
-    } else if (name.includes("saboó") || name.includes("saboo") || name.includes("ecs")) {
+    } else if (name.includes("saboó") || name.includes("saboo") || name.includes("e.c. saboó") || name === "ecs") {
         return "img/saboo.jpg";
     } else if (name.includes("unidos")) {
         return "img/unidos_fc.jpg";
     } else if (name.includes("patrick") || name.includes("só a nata") || name.includes("so a nata")) {
         return "img/patricks.jpg";
-    } else if (name.includes("barcelona") || name.includes("cab")) {
+    } else if (name.includes("barcelona") || name.includes("c.a.b") || name === "cab") {
         return "img/atletico_barcelona.jpg";
     } else if (name.includes("bem bolado") || name.includes("carumbé") || name.includes("carumbe")) {
         return "img/familia_bem_bolado.jpg";
-    } else if (name.includes("villa allegro") || name.includes("allegro") || name.includes("cava")) {
+    } else if (name.includes("villa allegro") || name.includes("allegro") || name.includes("c.a.v.a") || name === "cava") {
         return "img/villa_allegro.jpg";
     } else if (name.includes("futmax") || name.includes("ffca") || name.includes("aliados")) {
         return "img/futmax.jpg";
@@ -2219,7 +2219,7 @@ function getOpponentLogoUrl(opponentName) {
         return "img/jardim_europa.jpg";
     } else if (name.includes("atlético extra") || name.includes("atletico extra") || name.includes("extra")) {
         return "img/atletico_extra.jpg";
-    } else if (name.includes("papaléguas") || name.includes("papaleguas") || name.includes("city")) {
+    } else if (name.includes("papaléguas") || name.includes("papaleguas")) {
         return "img/papaleguas_city.jpg";
     } else if (name.includes("metralhas") || name.includes("metralha") || name.includes("irmãos") || name.includes("irmaos")) {
         return "img/irmaos_metralhas.jpg";
