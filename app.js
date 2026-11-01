@@ -150,7 +150,7 @@ const defaultMatches = [
     },
     {
         id: 13,
-        opponent: "Família Bem Bolado",
+        opponent: "Clube Atlético Paulistano",
         date: "08/11/2026",
         time: "08:00",
         location: "Campo da Cerim (Nosso Campo)",
@@ -279,6 +279,17 @@ const defaultMatches = [
         played: false,
         homeScore: 0,
         awayScore: 0
+    },
+    {
+        id: 25,
+        opponent: "Família Bem Bolado",
+        date: "21/02/2027",
+        time: "08:00",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -320,7 +331,7 @@ function ensureRequiredMatches() {
     let changed = false;
 
     // Remove do array de excluídos caso tenha entrado por engano
-    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas') && !s.includes('metralhas') && !s.includes('metralha') && !s.includes('irmaos') && !s.includes('irmãos') && !s.includes('real madri') && !s.includes('madri') && !s.includes('sorocabano'));
+    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas') && !s.includes('metralhas') && !s.includes('metralha') && !s.includes('irmaos') && !s.includes('irmãos') && !s.includes('real madri') && !s.includes('madri') && !s.includes('sorocabano') && !s.includes('paulistano'));
     localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
 
     // 0. Confronto 11/10/2026 às 08:30h - Em nosso campo contra Irmãos Metralhas F.C.
@@ -375,6 +386,34 @@ function ensureRequiredMatches() {
             matches[idx18] = papaleguasMatch;
         } else {
             matches.push(papaleguasMatch);
+        }
+        changed = true;
+    }
+
+    // 1.2 Confronto 08/11/2026 às 08:00h - Em nosso campo contra Clube Atlético Paulistano
+    const hasPaulistano = matches.some(m => m.opponent && m.opponent.toLowerCase().includes('paulistano') && m.date === '08/11/2026');
+    if (!hasPaulistano) {
+        const idx08 = matches.findIndex(m => m.date === '08/11/2026');
+        const paulistanoMatch = {
+            id: 13,
+            opponent: "Clube Atlético Paulistano",
+            date: "08/11/2026",
+            time: "08:00",
+            location: "Campo da Cerim (Nosso Campo)",
+            isHome: true,
+            played: false,
+            homeScore: 0,
+            awayScore: 0
+        };
+        if (idx08 !== -1) {
+            const oldMatch = matches[idx08];
+            if (oldMatch.opponent && !oldMatch.opponent.toLowerCase().includes('paulistano')) {
+                oldMatch.date = "21/02/2027";
+                matches.push(oldMatch);
+            }
+            matches[idx08] = paulistanoMatch;
+        } else {
+            matches.push(paulistanoMatch);
         }
         changed = true;
     }
@@ -2225,6 +2264,8 @@ function getOpponentLogoUrl(opponentName) {
         return "img/irmaos_metralhas.jpg";
     } else if (name.includes("real madri") || name.includes("madri") || name.includes("sorocabano")) {
         return "img/real_madri_sorocabano.jpg";
+    } else if (name.includes("paulistano") || name.includes("c.a.p") || name === "cap") {
+        return "img/atletico_paulistano.jpg";
     }
     return "";
 }
@@ -2913,7 +2954,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowOffsetY = 8;
         
         const nameUpper = (config.opponent || '').toUpperCase();
-        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper.includes('ECS') || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper.includes('CAVA') || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA') || nameUpper.includes('JARDIM EUROPA') || nameUpper.includes('EUROPA');
+        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper === 'ECS' || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper === 'CAVA' || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA') || nameUpper.includes('JARDIM EUROPA') || nameUpper.includes('EUROPA') || nameUpper.includes('PAULISTANO') || nameUpper.includes('METRALHA');
 
         if (needsCircularClip) {
             // Círculo de fundo branco para oponente
