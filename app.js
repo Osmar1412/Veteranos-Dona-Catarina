@@ -205,11 +205,11 @@ const defaultMatches = [
     },
     {
         id: 18,
-        opponent: "Pantera Negra F.C.",
+        opponent: "Os Papudinhos F.C.",
         date: "13/12/2026",
-        time: "08:00",
-        location: "Campo do Pantera Negra",
-        isHome: false,
+        time: "08:30",
+        location: "Campo da Cerim (Nosso Campo)",
+        isHome: true,
         played: false,
         homeScore: 0,
         awayScore: 0
@@ -301,6 +301,17 @@ const defaultMatches = [
         played: false,
         homeScore: 0,
         awayScore: 0
+    },
+    {
+        id: 27,
+        opponent: "Pantera Negra F.C.",
+        date: "07/03/2027",
+        time: "08:00",
+        location: "Campo do Pantera Negra",
+        isHome: false,
+        played: false,
+        homeScore: 0,
+        awayScore: 0
     }
 ];
 
@@ -342,7 +353,7 @@ function ensureRequiredMatches() {
     let changed = false;
 
     // Remove do array de excluídos caso tenha entrado por engano
-    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas') && !s.includes('metralhas') && !s.includes('metralha') && !s.includes('irmaos') && !s.includes('irmãos') && !s.includes('real madri') && !s.includes('madri') && !s.includes('sorocabano') && !s.includes('paulistano') && !s.includes('bm f'));
+    deletedMatches = deletedMatches.filter(s => !s.includes('extra') && !s.includes('papaleguas') && !s.includes('papaléguas') && !s.includes('metralhas') && !s.includes('metralha') && !s.includes('irmaos') && !s.includes('irmãos') && !s.includes('real madri') && !s.includes('madri') && !s.includes('sorocabano') && !s.includes('paulistano') && !s.includes('bm f') && !s.includes('papudinho'));
     localStorage.setItem('vet_dona_catarina_deleted_matches', JSON.stringify(deletedMatches));
 
     // 0. Confronto 11/10/2026 às 08:30h - Em nosso campo contra Irmãos Metralhas F.C.
@@ -509,6 +520,34 @@ function ensureRequiredMatches() {
             matches[idx06] = extraMatchDec;
         } else {
             matches.push(extraMatchDec);
+        }
+        changed = true;
+    }
+
+    // 2.2 Confronto 13/12/2026 às 08:30h - Em nosso campo contra Os Papudinhos F.C.
+    const hasPapudinhos = matches.some(m => m.opponent && m.opponent.toLowerCase().includes('papudinho') && m.date === '13/12/2026');
+    if (!hasPapudinhos) {
+        const idx13 = matches.findIndex(m => m.date === '13/12/2026');
+        const papudinhosMatch = {
+            id: 18,
+            opponent: "Os Papudinhos F.C.",
+            date: "13/12/2026",
+            time: "08:30",
+            location: "Campo da Cerim (Nosso Campo)",
+            isHome: true,
+            played: false,
+            homeScore: 0,
+            awayScore: 0
+        };
+        if (idx13 !== -1) {
+            const oldMatch = matches[idx13];
+            if (oldMatch.opponent && !oldMatch.opponent.toLowerCase().includes('papudinho')) {
+                oldMatch.date = "07/03/2027";
+                matches.push(oldMatch);
+            }
+            matches[idx13] = papudinhosMatch;
+        } else {
+            matches.push(papudinhosMatch);
         }
         changed = true;
     }
@@ -2307,6 +2346,8 @@ function getOpponentLogoUrl(opponentName) {
         return "img/atletico_paulistano.jpg";
     } else if (name.includes("bm f") || name.includes("b.m") || name === "bm") {
         return "img/bm_fc.jpg";
+    } else if (name.includes("papudinho") || name.includes("cabreúva") || name.includes("cabreuva")) {
+        return "img/os_papudinhos.jpg";
     }
     return "";
 }
@@ -2995,7 +3036,7 @@ async function generateMatchCardUrl(config) {
         ctx.shadowOffsetY = 8;
         
         const nameUpper = (config.opponent || '').toUpperCase();
-        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper === 'ECS' || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper === 'CAVA' || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA') || nameUpper.includes('JARDIM EUROPA') || nameUpper.includes('EUROPA') || nameUpper.includes('PAULISTANO') || nameUpper.includes('METRALHA') || nameUpper.includes('BM F') || nameUpper === 'BM';
+        const needsCircularClip = nameUpper.includes('GRÁFICA') || nameUpper.includes('GRAFICA') || nameUpper.includes('FM') || nameUpper.includes('SÃO JOSÉ') || nameUpper.includes('SAO JOSE') || nameUpper.includes('SÃO JOÃO') || nameUpper.includes('SAO JOAO') || nameUpper.includes('SABOÓ') || nameUpper.includes('SABOO') || nameUpper === 'ECS' || nameUpper.includes('BEM BOLADO') || nameUpper.includes('VILLA ALLEGRO') || nameUpper === 'CAVA' || nameUpper.includes('RONDA') || nameUpper.includes('PANTERA') || nameUpper.includes('JARDIM EUROPA') || nameUpper.includes('EUROPA') || nameUpper.includes('PAULISTANO') || nameUpper.includes('METRALHA') || nameUpper.includes('BM F') || nameUpper === 'BM' || nameUpper.includes('PAPUDINHO');
 
         if (needsCircularClip) {
             // Círculo de fundo branco para oponente
